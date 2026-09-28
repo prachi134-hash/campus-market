@@ -9,9 +9,11 @@ import { CartProvider } from "./context/CartContext"
 import Home from "./pages/Home"
 import Sell from "./pages/Sell"
 import Marketplace from "./pages/Marketplace"
+import ProductDetails from "./pages/ProductDetails"
 import Profile from "./pages/Profile"
 import Login from "./pages/Login"
 import Signup from "./pages/Signup"
+
 
 function App() {
   return (
@@ -27,6 +29,10 @@ function App() {
           <Route
             path="/marketplace"
             element={<Marketplace />}
+          />
+          <Route
+            path="/product/:id"
+            element={<ProductDetails />}
           />
 
           <Route

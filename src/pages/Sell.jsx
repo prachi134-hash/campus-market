@@ -12,6 +12,15 @@ function Sell() {
 
   const [imagePreview, setImagePreview] = useState(null)
 
+  // Temporary frontend data.
+  // Later this will come from the seller's college in MongoDB.
+  const meetupLocations = [
+    "Main Gate",
+    "Library",
+    "Cafeteria",
+    "Academic Block",
+  ]
+
   const handleChange = (e) => {
     setFormData({
       ...formData,
@@ -322,7 +331,7 @@ function Sell() {
 
                 </div>
 
-                {/* Condition + Location */}
+                {/* Condition + Meetup Location */}
                 <div className="grid gap-5 sm:grid-cols-2">
 
                   <div>
@@ -360,16 +369,46 @@ function Sell() {
                       Meetup location
                     </label>
 
-                    <input
+                    <select
                       id="location"
                       name="location"
-                      type="text"
                       value={formData.location}
                       onChange={handleChange}
-                      placeholder="e.g. Main gate"
-                      className="w-full rounded-xl border border-[#d5cbbd] bg-[#f8f5ee] px-4 py-3 text-sm text-[#25231f] outline-none transition placeholder:text-[#a39c92] focus:border-[#c65d45] focus:ring-2 focus:ring-[#c65d45]/10"
+                      className="w-full rounded-xl border border-[#d5cbbd] bg-[#f8f5ee] px-4 py-3 text-sm text-[#625e57] outline-none transition focus:border-[#c65d45] focus:ring-2 focus:ring-[#c65d45]/10"
                       required
-                    />
+                    >
+                      <option value="">Select meetup location</option>
+
+                      {meetupLocations.map((location) => (
+                        <option key={location} value={location}>
+                          {location}
+                        </option>
+                      ))}
+                    </select>
+
+                  </div>
+
+                </div>
+
+                {/* Meetup Information */}
+                <div className="rounded-xl border border-[#ddd4c7] bg-[#f5f1e9] px-4 py-3.5">
+
+                  <div className="flex items-start gap-3">
+
+                    <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#f1e4dc] text-[#c65d45]">
+                      ⌖
+                    </div>
+
+                    <div>
+                      <p className="text-xs font-bold text-[#302e2a]">
+                        Campus Meetup
+                      </p>
+
+                      <p className="mt-1 text-[10px] leading-5 text-[#817b72]">
+                        Buyers can meet you at the selected campus location
+                        after placing an order.
+                      </p>
+                    </div>
 
                   </div>
 
