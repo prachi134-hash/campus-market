@@ -1,3 +1,4 @@
+
 import { useState } from "react"
 import { Link, useLocation, useNavigate } from "react-router-dom"
 
@@ -35,6 +36,11 @@ function Login() {
         return
       }
 
+      // Tell Navbar that login state has changed
+      window.dispatchEvent(
+        new Event("campusMarketAuthChange")
+      )
+
       navigate(from, { replace: true })
       return
     }
@@ -57,6 +63,11 @@ function Login() {
     localStorage.setItem(
       "campusMarketUser",
       JSON.stringify(demoUser)
+    )
+
+    // Tell Navbar that login state has changed
+    window.dispatchEvent(
+      new Event("campusMarketAuthChange")
     )
 
     navigate(from, { replace: true })
@@ -205,9 +216,11 @@ function Login() {
 
           <div className="my-6 flex items-center gap-4">
             <span className="h-px flex-1 bg-[#ded6ca]" />
+
             <span className="text-[9px] uppercase tracking-[0.12em] text-[#9a9389]">
               New here?
             </span>
+
             <span className="h-px flex-1 bg-[#ded6ca]" />
           </div>
 
@@ -231,3 +244,4 @@ function Login() {
 }
 
 export default Login
+

@@ -1,5 +1,9 @@
+
 import { Link, useLocation, useNavigate } from "react-router-dom"
-import { useState } from "react"
+import { useEffect, useState } from "react"
+
+import { useCart } from "../context/CartContext"
+import { useWishlist } from "../context/WishlistContext"
 
 function Navbar() {
   const location = useLocation()
@@ -7,13 +11,64 @@ function Navbar() {
 
   const [menuOpen, setMenuOpen] = useState(false)
 
-  const isLoggedIn = localStorage.getItem("campusMarketUser") !== null
+  // IMPORTANT:
+  // Keep login state inside React so Navbar updates immediately.
+  const [isLoggedIn, setIsLoggedIn] = useState(
+    () => localStorage.getItem("campusMarketUser") !== null
+  )
+
+  const { cartCount } = useCart()
+  const { wishlist } = useWishlist()
+
+  /*
+    Login.jsx and Signup.jsx dispatch this event
+    after successful authentication.
+
+    Profile/logout also dispatch it after logout.
+  */
+  useEffect(() => {
+    const updateAuthState = () => {
+      setIsLoggedIn(
+        localStorage.getItem("campusMarketUser") !== null
+      )
+    }
+
+    window.addEventListener(
+      "campusMarketAuthChange",
+      updateAuthState
+    )
+
+    return () => {
+      window.removeEventListener(
+        "campusMarketAuthChange",
+        updateAuthState
+      )
+    }
+  }, [])
+
+  /*
+    Also check when the route changes.
+    This keeps the Navbar synchronized if authentication
+    changes through another page.
+  */
+  useEffect(() => {
+    setIsLoggedIn(
+      localStorage.getItem("campusMarketUser") !== null
+    )
+  }, [location.pathname])
 
   const isActive = (path) => location.pathname === path
 
   const handleLogout = () => {
     localStorage.removeItem("campusMarketUser")
+
+    setIsLoggedIn(false)
     setMenuOpen(false)
+
+    window.dispatchEvent(
+      new Event("campusMarketAuthChange")
+    )
+
     navigate("/")
   }
 
@@ -52,9 +107,9 @@ function Navbar() {
             </Link>
 
             {/* DESKTOP NAVIGATION */}
-            <div className="hidden items-center gap-8 md:flex">
+            <div className="hidden items-center gap-6 md:flex">
 
-              <nav className="flex items-center gap-8">
+              <nav className="flex items-center gap-7">
 
                 <NavLink
                   to="/"
@@ -79,18 +134,87 @@ function Navbar() {
 
               </nav>
 
-              {/* DESKTOP PROFILE */}
-              <Link
-                to="/profile"
-                aria-label="Profile"
-                className={`flex h-10 w-10 items-center justify-center rounded-full border transition duration-200 ${
-                  isActive("/profile")
-                    ? "border-[#c65d45] bg-[#c65d45]"
-                    : "border-[#625d55] bg-[#3a3732] hover:border-[#c65d45] hover:bg-[#c65d45]"
-                }`}
-              >
-                <ProfileIcon />
-              </Link>
+              {/* =================================================
+                  LOGGED-IN DESKTOP ACTIONS
+              ================================================= */}
+              {isLoggedIn ? (
+                <div className="flex items-center gap-2">
+
+                  {/* WISHLIST */}
+                  <Link
+                    to="/wishlist"
+                    aria-label="Wishlist"
+                    className={`relative flex h-10 w-10 items-center justify-center rounded-full border transition duration-200 ${
+                      isActive("/wishlist")
+                        ? "border-[#c65d45] bg-[#c65d45]"
+                        : "border-[#625d55] bg-[#3a3732] hover:border-[#c65d45] hover:bg-[#c65d45]"
+                    }`}
+                  >
+                    <HeartIcon filled={isActive("/wishlist")} />
+
+                    {wishlist.length > 0 && (
+                      <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-[#c65d45] px-1 text-[9px] font-bold text-white">
+                        {wishlist.length}
+                      </span>
+                    )}
+                  </Link>
+
+                  {/* CART */}
+                  <Link
+                    to="/cart"
+                    aria-label="Cart"
+                    className={`relative flex h-10 w-10 items-center justify-center rounded-full border transition duration-200 ${
+                      isActive("/cart")
+                        ? "border-[#c65d45] bg-[#c65d45]"
+                        : "border-[#625d55] bg-[#3a3732] hover:border-[#c65d45] hover:bg-[#c65d45]"
+                    }`}
+                  >
+                    <CartIcon />
+
+                    {cartCount > 0 && (
+                      <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-[#c65d45] px-1 text-[9px] font-bold text-white">
+                        {cartCount}
+                      </span>
+                    )}
+                  </Link>
+
+                  {/* PROFILE */}
+                  <Link
+                    to="/profile"
+                    aria-label="Profile"
+                    className={`flex h-10 w-10 items-center justify-center rounded-full border transition duration-200 ${
+                      isActive("/profile")
+                        ? "border-[#c65d45] bg-[#c65d45]"
+                        : "border-[#625d55] bg-[#3a3732] hover:border-[#c65d45] hover:bg-[#c65d45]"
+                    }`}
+                  >
+                    <ProfileIcon />
+                  </Link>
+
+                </div>
+              ) : (
+
+                /* =================================================
+                   LOGGED-OUT DESKTOP ACTIONS
+                ================================================= */
+                <div className="flex items-center gap-3">
+
+                  <Link
+                    to="/login"
+                    className="text-sm font-medium text-[#c8c2b9] transition hover:text-[#e4775e]"
+                  >
+                    Login
+                  </Link>
+
+                  <Link
+                    to="/signup"
+                    className="rounded-xl bg-[#c65d45] px-4 py-2.5 text-sm font-bold text-white transition hover:bg-[#b9503a]"
+                  >
+                    Sign Up
+                  </Link>
+
+                </div>
+              )}
 
             </div>
 
@@ -163,29 +287,72 @@ function Navbar() {
                 Sell
               </MobileMenuLink>
 
-              <MobileMenuLink
-                to="/profile"
-                active={isActive("/profile")}
-                onClick={() => setMenuOpen(false)}
-              >
-                Profile
-              </MobileMenuLink>
+              {/* LOGGED-IN MOBILE OPTIONS */}
+              {isLoggedIn ? (
+                <>
+                  <MobileMenuLink
+                    to="/wishlist"
+                    active={isActive("/wishlist")}
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    Wishlist
 
-              {!isLoggedIn ? (
-                <Link
-                  to="/login"
-                  onClick={() => setMenuOpen(false)}
-                  className="mt-3 flex items-center justify-center rounded-xl bg-[#c65d45] px-4 py-3 text-sm font-bold text-white"
-                >
-                  Login
-                </Link>
+                    {wishlist.length > 0 && (
+                      <span className="rounded-full bg-[#c65d45] px-2 py-0.5 text-[10px] text-white">
+                        {wishlist.length}
+                      </span>
+                    )}
+                  </MobileMenuLink>
+
+                  <MobileMenuLink
+                    to="/cart"
+                    active={isActive("/cart")}
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    Cart
+
+                    {cartCount > 0 && (
+                      <span className="rounded-full bg-[#c65d45] px-2 py-0.5 text-[10px] text-white">
+                        {cartCount}
+                      </span>
+                    )}
+                  </MobileMenuLink>
+
+                  <MobileMenuLink
+                    to="/profile"
+                    active={isActive("/profile")}
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    Profile
+                  </MobileMenuLink>
+
+                  <button
+                    onClick={handleLogout}
+                    className="mt-3 w-full rounded-xl border border-[#625d55] px-4 py-3 text-sm font-semibold text-[#d4cec5]"
+                  >
+                    Log out
+                  </button>
+                </>
               ) : (
-                <button
-                  onClick={handleLogout}
-                  className="mt-3 w-full rounded-xl border border-[#625d55] px-4 py-3 text-sm font-semibold text-[#d4cec5]"
-                >
-                  Log out
-                </button>
+
+                /* LOGGED-OUT MOBILE OPTIONS */
+                <>
+                  <Link
+                    to="/login"
+                    onClick={() => setMenuOpen(false)}
+                    className="mt-3 flex items-center justify-center rounded-xl border border-[#625d55] px-4 py-3 text-sm font-semibold text-[#d4cec5] transition hover:border-[#c65d45] hover:text-[#e4775e]"
+                  >
+                    Login
+                  </Link>
+
+                  <Link
+                    to="/signup"
+                    onClick={() => setMenuOpen(false)}
+                    className="flex items-center justify-center rounded-xl bg-[#c65d45] px-4 py-3 text-sm font-bold text-white"
+                  >
+                    Sign Up
+                  </Link>
+                </>
               )}
 
             </div>
@@ -217,6 +384,14 @@ function Navbar() {
           />
 
           <BottomNavItem
+            to={isLoggedIn ? "/wishlist" : "/login"}
+            label="Saved"
+            active={isActive("/wishlist")}
+            icon="heart"
+            badge={isLoggedIn ? wishlist.length : 0}
+          />
+
+          <BottomNavItem
             to="/sell"
             label="Sell"
             active={isActive("/sell")}
@@ -224,7 +399,15 @@ function Navbar() {
           />
 
           <BottomNavItem
-            to="/profile"
+            to={isLoggedIn ? "/cart" : "/login"}
+            label="Cart"
+            active={isActive("/cart")}
+            icon="cart"
+            badge={isLoggedIn ? cartCount : 0}
+          />
+
+          <BottomNavItem
+            to={isLoggedIn ? "/profile" : "/login"}
             label="Profile"
             active={isActive("/profile")}
             icon="user"
@@ -284,70 +467,136 @@ function MobileMenuLink({ to, active, onClick, children }) {
    BOTTOM NAV ITEM
 ========================================================= */
 
-function BottomNavItem({ to, label, active, icon }) {
+function BottomNavItem({
+  to,
+  label,
+  active,
+  icon,
+  badge = 0,
+}) {
   return (
     <Link
       to={to}
-      className={`flex min-w-[64px] flex-col items-center justify-center gap-1.5 ${
+      className={`relative flex min-w-[48px] flex-col items-center justify-center gap-1.5 ${
         active ? "text-[#c65d45]" : "text-[#817b72]"
       }`}
     >
-      {icon === "home" && (
-        <svg
-          width="19"
-          height="19"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.7"
-        >
-          <path d="m3 10 9-7 9 7" />
-          <path d="M5 9v11h14V9" />
-          <path d="M9 20v-6h6v6" />
-        </svg>
-      )}
 
-      {icon === "search" && (
-        <svg
-          width="19"
-          height="19"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.7"
-        >
-          <circle cx="11" cy="11" r="7" />
-          <path d="m20 20-4-4" />
-        </svg>
-      )}
+      <div className="relative">
 
-      {icon === "plus" && (
-        <span
-          className={`flex h-8 w-8 items-center justify-center rounded-full ${
-            active
-              ? "bg-[#c65d45] text-white"
-              : "border border-[#d4cabc] bg-[#f5f1e9]"
-          }`}
-        >
+        {icon === "home" && (
           <svg
-            width="17"
-            height="17"
+            width="19"
+            height="19"
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
             strokeWidth="1.7"
           >
-            <path d="M12 5v14M5 12h14" />
+            <path d="m3 10 9-7 9 7" />
+            <path d="M5 9v11h14V9" />
+            <path d="M9 20v-6h6v6" />
           </svg>
-        </span>
-      )}
+        )}
 
-      {icon === "user" && <ProfileIcon />}
+        {icon === "search" && (
+          <svg
+            width="19"
+            height="19"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.7"
+          >
+            <circle cx="11" cy="11" r="7" />
+            <path d="m20 20-4-4" />
+          </svg>
+        )}
+
+        {icon === "heart" && (
+          <HeartIcon filled={active} />
+        )}
+
+        {icon === "cart" && (
+          <CartIcon />
+        )}
+
+        {icon === "plus" && (
+          <span
+            className={`flex h-8 w-8 items-center justify-center rounded-full ${
+              active
+                ? "bg-[#c65d45] text-white"
+                : "border border-[#d4cabc] bg-[#f5f1e9]"
+            }`}
+          >
+            <svg
+              width="17"
+              height="17"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.7"
+            >
+              <path d="M12 5v14M5 12h14" />
+            </svg>
+          </span>
+        )}
+
+        {icon === "user" && <ProfileIcon />}
+
+        {badge > 0 && (
+          <span className="absolute -right-3 -top-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-[#c65d45] px-1 text-[8px] font-bold text-white">
+            {badge}
+          </span>
+        )}
+
+      </div>
 
       <span className="text-[9px] font-semibold">
         {label}
       </span>
+
     </Link>
+  )
+}
+
+/* =========================================================
+   HEART ICON
+========================================================= */
+
+function HeartIcon({ filled = false }) {
+  return (
+    <svg
+      width="18"
+      height="18"
+      viewBox="0 0 24 24"
+      fill={filled ? "currentColor" : "none"}
+      stroke="currentColor"
+      strokeWidth="1.8"
+    >
+      <path d="M20.8 8.8c0 5.5-8.8 10.2-8.8 10.2S3.2 14.3 3.2 8.8A4.8 4.8 0 0 1 12 6.2a4.8 4.8 0 0 1 8.8 2.6Z" />
+    </svg>
+  )
+}
+
+/* =========================================================
+   CART ICON
+========================================================= */
+
+function CartIcon() {
+  return (
+    <svg
+      width="18"
+      height="18"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+    >
+      <path d="M4 5h2l1.5 10h10l2-7H7" />
+      <circle cx="10" cy="19" r="1.3" />
+      <circle cx="17" cy="19" r="1.3" />
+    </svg>
   )
 }
 
@@ -377,3 +626,5 @@ function ProfileIcon() {
 }
 
 export default Navbar
+
+

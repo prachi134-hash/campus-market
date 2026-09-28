@@ -1,36 +1,203 @@
-import { useLocation, useNavigate } from "react-router-dom"
+
+import { useLocation, useNavigate, useParams } from "react-router-dom"
 import { useCart } from "../context/CartContext"
-import { useState } from "react"
+import { useWishlist } from "../context/WishlistContext"
+
+const fallbackProducts = {
+  1: {
+    id: 1,
+    title: "Engineering Mathematics — Vol. 2",
+    price: 450,
+    category: "Books & Notes",
+    condition: "Good",
+    location: "Library",
+    time: "2h ago",
+    owner: "Aarav Sharma",
+    college: "Cummins College of Engineering for Women",
+    year: "3rd Year",
+    description:
+      "Engineering Mathematics reference book in good condition. Useful for students preparing for semester examinations.",
+    image:
+      "https://images.unsplash.com/photo-1544947950-fa07a98d237f?auto=format&fit=crop&w=900&q=80",
+  },
+
+  2: {
+    id: 2,
+    title: "Casio Scientific Calculator",
+    price: 850,
+    category: "Electronics",
+    condition: "Excellent",
+    location: "Main Gate",
+    time: "4h ago",
+    owner: "Riya Patil",
+    college: "Cummins College of Engineering for Women",
+    year: "2nd Year",
+    description:
+      "Scientific calculator in excellent working condition. Suitable for engineering mathematics and examinations.",
+    image:
+      "https://images.unsplash.com/photo-1596495578060-5f0d5b9b9e5b?auto=format&fit=crop&w=900&q=80",
+  },
+
+  3: {
+    id: 3,
+    title: "Firefox Student Bicycle",
+    price: 3800,
+    category: "Cycles",
+    condition: "Good",
+    location: "Main Gate",
+    time: "6h ago",
+    owner: "Kunal Joshi",
+    college: "Cummins College of Engineering for Women",
+    year: "4th Year",
+    description:
+      "Student bicycle in good condition. Suitable for commuting around campus and nearby areas.",
+    image:
+      "https://images.unsplash.com/photo-1485965120184-e220f721d03e?auto=format&fit=crop&w=900&q=80",
+  },
+
+  4: {
+    id: 4,
+    title: "Clean Code — Robert C. Martin",
+    price: 520,
+    category: "Books & Notes",
+    condition: "Like new",
+    location: "Cafeteria",
+    time: "8h ago",
+    owner: "Sneha Kulkarni",
+    college: "Cummins College of Engineering for Women",
+    year: "3rd Year",
+    description:
+      "Clean Code book in like-new condition. Useful for students learning software development and writing maintainable code.",
+    image:
+      "https://images.unsplash.com/photo-1532012197267-da84d127e765?auto=format&fit=crop&w=900&q=80",
+  },
+
+  5: {
+    id: 5,
+    title: "Mechanical Keyboard",
+    price: 2200,
+    category: "Electronics",
+    condition: "Excellent",
+    location: "Academic Block",
+    time: "1d ago",
+    owner: "Aditya Deshmukh",
+    college: "Cummins College of Engineering for Women",
+    year: "3rd Year",
+    description:
+      "Mechanical keyboard in excellent condition with clean keys and working switches.",
+    image:
+      "https://images.unsplash.com/photo-1587829741301-dc798b83add3?auto=format&fit=crop&w=900&q=80",
+  },
+
+  6: {
+    id: 6,
+    title: "Desk Lamp",
+    price: 650,
+    category: "Furniture",
+    condition: "Good",
+    location: "Main Gate",
+    time: "1d ago",
+    owner: "Meera Shah",
+    college: "Cummins College of Engineering for Women",
+    year: "2nd Year",
+    description:
+      "Compact study desk lamp in good working condition.",
+    image:
+      "https://images.unsplash.com/photo-1507473885765-e6ed057f782c?auto=format&fit=crop&w=900&q=80",
+  },
+
+  7: {
+    id: 7,
+    title: "Java Programming Notes",
+    price: 250,
+    category: "Books & Notes",
+    condition: "Good",
+    location: "Library",
+    time: "2d ago",
+    owner: "Neha Gupta",
+    college: "Cummins College of Engineering for Women",
+    year: "3rd Year",
+    description:
+      "Handwritten and organized Java programming notes covering important concepts and examples.",
+    image:
+      "https://images.unsplash.com/photo-1515879218367-8466d910aaa4?auto=format&fit=crop&w=900&q=80",
+  },
+
+  8: {
+    id: 8,
+    title: "Laptop Stand",
+    price: 900,
+    category: "Electronics",
+    condition: "Like new",
+    location: "Main Gate",
+    time: "2d ago",
+    owner: "Ishita Jain",
+    college: "Cummins College of Engineering for Women",
+    year: "2nd Year",
+    description:
+      "Adjustable laptop stand in like-new condition.",
+    image:
+      "https://images.unsplash.com/photo-1527443224154-c4a3942d3acf?auto=format&fit=crop&w=900&q=80",
+  },
+
+  9: {
+    id: 9,
+    title: "College Backpack",
+    price: 700,
+    category: "Other",
+    condition: "Excellent",
+    location: "Cafeteria",
+    time: "3d ago",
+    owner: "Rahul More",
+    college: "Cummins College of Engineering for Women",
+    year: "2nd Year",
+    description:
+      "Spacious college backpack in excellent condition with multiple compartments.",
+    image:
+      "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&w=900&q=80",
+  },
+}
 
 function ProductDetails() {
+  const { id } = useParams()
   const location = useLocation()
   const navigate = useNavigate()
+
   const { addToCart } = useCart()
+  const {
+    toggleWishlist,
+    isInWishlist,
+  } = useWishlist()
 
-  const [added, setAdded] = useState(false)
-  const [fulfillment, setFulfillment] = useState("Campus Meetup")
+  /*
+    IMPORTANT:
+    Marketplace sends some product information through router state.
+    We merge it with fallback data so that the exact marketplace
+    information is preserved while owner/college/description etc.
+    are also available.
+  */
+  const fallbackProduct = fallbackProducts[id]
 
-  const product = location.state?.product
+  const product = {
+    ...fallbackProduct,
+    ...location.state?.product,
+  }
 
-  if (!product) {
+  if (!product.id) {
     return (
-      <main className="min-h-screen bg-[#f5f1e9] px-5 py-16 text-[#25231f]">
-        <div className="mx-auto max-w-xl rounded-2xl border border-[#d4cabc] bg-[#faf8f3] p-8 text-center">
-          <p className="text-xs font-bold uppercase tracking-[0.14em] text-[#c65d45]">
+      <main className="min-h-screen bg-[#f7f4ee] px-6 py-20">
+        <div className="mx-auto max-w-3xl text-center">
+          <h1 className="text-2xl font-semibold text-[#302e2a]">
             Product not found
-          </p>
-
-          <h1 className="mt-2 text-xl font-bold">
-            This item could not be loaded.
           </h1>
 
-          <p className="mt-2 text-sm text-[#817b72]">
-            The product may have been removed or the page was opened directly.
+          <p className="mt-2 text-sm text-[#716b63]">
+            This product could not be found.
           </p>
 
           <button
             onClick={() => navigate("/marketplace")}
-            className="mt-6 rounded-full bg-[#c65d45] px-6 py-3 text-xs font-bold text-white"
+            className="mt-6 rounded-full bg-[#302e2a] px-6 py-3 text-sm font-medium text-white"
           >
             Back to Marketplace
           </button>
@@ -39,212 +206,164 @@ function ProductDetails() {
     )
   }
 
-  const handleAddToCart = () => {
-    addToCart(product)
-    setAdded(true)
+  const saved = isInWishlist(product.id)
 
-    setTimeout(() => {
-      setAdded(false)
-    }, 2000)
+  const handleAddToCart = () => {
+    const user = localStorage.getItem("campusMarketUser")
+
+    if (!user) {
+      navigate("/login")
+      return
+    }
+
+    addToCart(product)
   }
 
   const handleBuyNow = () => {
+    const user = localStorage.getItem("campusMarketUser")
+
+    if (!user) {
+      navigate("/login")
+      return
+    }
+
     addToCart(product)
     navigate("/cart")
   }
 
   return (
-    <main className="min-h-screen bg-[#f5f1e9] text-[#25231f]">
-      <section className="mx-auto max-w-6xl px-4 py-6 sm:px-6 sm:py-10">
-
+    <main className="min-h-screen bg-[#f7f4ee]">
+      {/* Back */}
+      <div className="mx-auto max-w-7xl px-6 pt-6 sm:px-8">
         <button
           onClick={() => navigate("/marketplace")}
-          className="mb-6 flex items-center gap-2 text-xs font-bold text-[#625e57] transition hover:text-[#c65d45]"
+          className="text-sm text-[#716b63] transition hover:text-[#302e2a]"
         >
           ← Back to Marketplace
         </button>
+      </div>
 
-        <div className="grid gap-8 lg:grid-cols-2 lg:gap-12">
+      <section className="mx-auto max-w-7xl px-6 py-8 sm:px-8">
+        <div className="grid gap-10 lg:grid-cols-[1.05fr_0.95fr]">
 
-          {/* Product Image */}
-
-          <div className="overflow-hidden rounded-2xl border border-[#d4cabc] bg-[#e9e2d7]">
-            <div className="aspect-square">
-              {product.image ? (
-                <img
-                  src={product.image}
-                  alt={product.title}
-                  className="h-full w-full object-cover"
-                />
-              ) : (
-                <div className="flex h-full items-center justify-center text-sm text-[#938b80]">
-                  No image available
-                </div>
-              )}
+          {/* Product image */}
+          <div>
+            <div className="overflow-hidden rounded-2xl border border-[#ddd4c7] bg-[#eee9e0]">
+              <img
+                src={product.image}
+                alt={product.title}
+                className="aspect-[4/3] h-full w-full object-cover"
+              />
             </div>
           </div>
 
-          {/* Product Information */}
-
-          <div className="flex flex-col">
-
-            <div className="flex items-center justify-between gap-3">
-
-              <span className="rounded-full bg-[#f1e4dc] px-3 py-1.5 text-[9px] font-extrabold uppercase tracking-[0.1em] text-[#c65d45]">
-                {product.condition || "Good"}
+          {/* Product information */}
+          <div>
+            <div className="flex items-center justify-between gap-4">
+              <span className="text-xs font-medium uppercase tracking-[0.16em] text-[#8b8378]">
+                {product.category}
               </span>
 
-              <button
-                className="flex h-9 w-9 items-center justify-center rounded-full border border-[#d4cabc] bg-[#faf8f3] text-lg text-[#625e57] transition hover:border-[#c65d45] hover:text-[#c65d45]"
-                aria-label="Save item"
-              >
-                ♡
-              </button>
-
+              <span className="rounded-full bg-[#e9e2d8] px-3 py-1 text-xs font-medium text-[#5f5951]">
+                {product.condition}
+              </span>
             </div>
 
-            <p className="mt-5 text-[10px] font-bold uppercase tracking-[0.16em] text-[#c65d45]">
-              {product.category}
-            </p>
-
-            <h1 className="mt-2 text-2xl font-bold leading-tight tracking-[-0.03em] sm:text-3xl">
+            <h1 className="mt-4 text-3xl font-semibold leading-tight tracking-tight text-[#20201e] sm:text-4xl">
               {product.title}
             </h1>
 
-            <p className="mt-5 text-3xl font-bold text-[#25231f]">
-              ₹{Number(product.price || 0).toLocaleString("en-IN")}
+            <p className="mt-4 text-3xl font-semibold text-[#c65d45]">
+              ₹{product.price}
             </p>
 
-            {/* Location */}
-
-            <div className="mt-6 border-y border-[#ddd4c7] py-5">
-              <div className="flex items-start gap-3">
-
-                <span className="mt-0.5 text-base">
-                  ⌖
-                </span>
-
-                <div>
-                  <p className="text-xs font-bold">
-                    Pickup / Delivery location
-                  </p>
-
-                  <p className="mt-1 text-xs text-[#817b72]">
-                    {product.location || "Campus location"}
-                  </p>
-                </div>
-
-              </div>
-            </div>
-
-            {/* Fulfillment */}
-
-            <div className="mt-6">
-
-              <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#817b72]">
-                Fulfillment
-              </p>
-
-              <div className="mt-3 grid grid-cols-2 gap-2">
-
-                <button
-                  onClick={() => setFulfillment("Campus Meetup")}
-                  className={`rounded-xl border px-3 py-3 text-left transition ${
-                    fulfillment === "Campus Meetup"
-                      ? "border-[#c65d45] bg-[#f1e4dc]"
-                      : "border-[#d4cabc] bg-[#faf8f3]"
-                  }`}
-                >
-                  <p
-                    className={`text-xs font-bold ${
-                      fulfillment === "Campus Meetup"
-                        ? "text-[#c65d45]"
-                        : "text-[#302e2a]"
-                    }`}
-                  >
-                    Campus Meetup
-                  </p>
-
-                  <p className="mt-1 text-[10px] text-[#817b72]">
-                    Meet the seller on campus
-                  </p>
-                </button>
-
-                <button
-                  onClick={() =>
-                    setFulfillment("Seller-arranged Delivery")
-                  }
-                  className={`rounded-xl border px-3 py-3 text-left transition ${
-                    fulfillment === "Seller-arranged Delivery"
-                      ? "border-[#c65d45] bg-[#f1e4dc]"
-                      : "border-[#d4cabc] bg-[#faf8f3]"
-                  }`}
-                >
-                  <p
-                    className={`text-xs font-bold ${
-                      fulfillment === "Seller-arranged Delivery"
-                        ? "text-[#c65d45]"
-                        : "text-[#302e2a]"
-                    }`}
-                  >
-                    Home Delivery
-                  </p>
-
-                  <p className="mt-1 text-[10px] text-[#817b72]">
-                    Arranged by the seller
-                  </p>
-                </button>
-
-              </div>
-            </div>
+            <p className="mt-6 text-sm leading-7 text-[#716b63]">
+              {product.description}
+            </p>
 
             {/* Seller */}
-
-            <div className="mt-6 rounded-xl border border-[#d4cabc] bg-[#faf8f3] p-4">
-
-              <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-[#817b72]">
+            <div className="mt-8 rounded-2xl border border-[#ddd4c7] bg-white p-5">
+              <p className="text-xs font-medium uppercase tracking-[0.14em] text-[#8b8378]">
                 Seller
               </p>
 
               <div className="mt-3 flex items-center gap-3">
-
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#302e2a] text-xs font-bold text-white">
-                  AS
+                <div className="flex h-11 w-11 items-center justify-center rounded-full bg-[#302e2a] text-sm font-semibold text-white">
+                  {product.owner?.charAt(0) || "S"}
                 </div>
 
                 <div>
-                  <p className="text-sm font-bold">
-                    Aarav Sharma
+                  <p className="font-semibold text-[#302e2a]">
+                    {product.owner || "Campus Market Seller"}
                   </p>
 
-                  <p className="mt-0.5 text-[10px] text-[#817b72]">
-                    Cummins College · Nagpur
+                  <p className="mt-1 text-xs text-[#716b63]">
+                    {product.year || "Student"}
                   </p>
                 </div>
-
               </div>
             </div>
 
-            {/* Buttons */}
+            {/* College */}
+            <div className="mt-4 rounded-2xl border border-[#ddd4c7] bg-white p-5">
+              <p className="text-xs font-medium uppercase tracking-[0.14em] text-[#8b8378]">
+                College
+              </p>
 
-            <div className="mt-7 grid grid-cols-2 gap-3">
+              <p className="mt-2 text-sm font-medium text-[#302e2a]">
+                {product.college || "College information unavailable"}
+              </p>
+            </div>
 
-              <button
-                onClick={handleAddToCart}
-                className="rounded-xl border border-[#c65d45] bg-[#faf8f3] px-4 py-3.5 text-xs font-extrabold text-[#c65d45] transition hover:bg-[#c65d45] hover:text-white"
-              >
-                {added ? "Added ✓" : "Add to Cart"}
-              </button>
+            {/* Meetup */}
+            <div className="mt-4 rounded-2xl border border-[#ddd4c7] bg-white p-5">
+              <p className="text-xs font-medium uppercase tracking-[0.14em] text-[#8b8378]">
+                Campus Meetup
+              </p>
 
+              <div className="mt-3 flex items-start gap-3">
+                <div className="text-lg">⌖</div>
+
+                <div>
+                  <p className="text-sm font-semibold text-[#302e2a]">
+                    {product.location}
+                  </p>
+
+                  <p className="mt-1 text-xs leading-5 text-[#716b63]">
+                    Exact meetup details will be arranged after the
+                    order is confirmed.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="mt-7 grid gap-3 sm:grid-cols-[1fr_auto]">
               <button
                 onClick={handleBuyNow}
-                className="rounded-xl bg-[#c65d45] px-4 py-3.5 text-xs font-extrabold text-white transition hover:bg-[#a94d39]"
+                className="rounded-full bg-[#302e2a] px-6 py-3.5 text-sm font-medium text-white transition hover:bg-[#45413b]"
               >
                 Buy Now
               </button>
 
+              <button
+                onClick={() => toggleWishlist(product)}
+                className="rounded-full border border-[#302e2a] px-6 py-3.5 text-sm font-medium text-[#302e2a] transition hover:bg-[#302e2a] hover:text-white"
+              >
+                {saved ? "♥ Saved" : "♡ Save"}
+              </button>
             </div>
 
+            <button
+              onClick={handleAddToCart}
+              className="mt-3 w-full rounded-full border border-[#c65d45] px-6 py-3.5 text-sm font-medium text-[#c65d45] transition hover:bg-[#c65d45] hover:text-white"
+            >
+              Add to Cart
+            </button>
+
+            <p className="mt-4 text-center text-xs text-[#8b8378]">
+              Campus meetup only · No delivery
+            </p>
           </div>
         </div>
       </section>
@@ -253,3 +372,4 @@ function ProductDetails() {
 }
 
 export default ProductDetails
+

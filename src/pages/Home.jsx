@@ -1,7 +1,8 @@
-
+import { useNavigate } from "react-router-dom"
 import ProductCard from "../components/ProductCard"
 
 function Home() {
+  const navigate = useNavigate()
 
   const categories = [
     {
@@ -32,26 +33,29 @@ function Home() {
 
   const products = [
     {
+      id: 101,
       image:
         "https://images.unsplash.com/photo-1544947950-fa07a98d237f?auto=format&fit=crop&w=900&q=85",
       title: "Engineering Mathematics Book",
-      price: "280",
-      category: "Books",
-      condition: "Like New",
+      price: 280,
+      category: "Books & Notes",
+      condition: "Like new",
     },
     {
+      id: 102,
       image:
         "https://images.unsplash.com/photo-1593642532400-2682810df593?auto=format&fit=crop&w=900&q=85",
       title: "Wireless Keyboard",
-      price: "650",
+      price: 650,
       category: "Electronics",
       condition: "Good",
     },
     {
+      id: 103,
       image:
         "https://images.unsplash.com/photo-1503602642458-232111445657?auto=format&fit=crop&w=900&q=85",
       title: "Study Chair",
-      price: "900",
+      price: 900,
       category: "Furniture",
       condition: "Good",
     },
@@ -65,18 +69,18 @@ function Home() {
     },
     {
       number: "02",
-      title: "Connect",
-      text: "Message the seller and ask what you need to know.",
-    },
-    {
-      number: "03",
       title: "Meet",
       text: "Choose a convenient place inside your campus.",
     },
     {
+      number: "03",
+      title: "Pay & Pick Up",
+      text: "Pay safely and collect your item at the meetup.",
+    },
+    {
       number: "04",
       title: "Done",
-      text: "Pick it up, pay safely and give it a second life.",
+      text: "Give something you no longer need a second life.",
     },
   ]
 
@@ -94,7 +98,6 @@ function Home() {
       />
 
       <div className="pointer-events-none fixed inset-0 -z-10 bg-[#f5f1e9]/85" />
-
 
       {/* HERO */}
 
@@ -114,37 +117,27 @@ function Home() {
 
         <div className="absolute -right-32 bottom-0 h-96 w-96 rounded-full border border-[#c65d45]/10" />
 
-
         <div className="relative mx-auto grid max-w-7xl gap-12 px-6 py-16 md:grid-cols-[1.05fr_.95fr] md:items-center md:py-20">
 
           <div>
 
             <div className="mb-6 flex items-center gap-3">
-
               <span className="h-px w-9 bg-[#c65d45]" />
 
               <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-[#c65d45]">
                 Student Life • Campus Edition
               </p>
-
             </div>
 
-
             <h1 className="max-w-3xl text-5xl font-bold leading-[0.98] tracking-[-0.055em] text-[#25231f] md:text-7xl">
-
               Good things
               <br />
-
               <span className="text-[#c65d45]">
                 deserve a second
               </span>
-
               <br />
-
               campus life.
-
             </h1>
-
 
             <p className="mt-6 max-w-xl text-[15px] leading-7 text-[#625e57]">
               Buy, sell and discover useful things from students
@@ -152,21 +145,25 @@ function Home() {
               and everything a little closer to home.
             </p>
 
-
             <div className="mt-7 flex flex-wrap items-center gap-3">
 
-              <button className="rounded-lg bg-[#25231f] px-6 py-3 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-[#c65d45]">
+              <button
+                onClick={() => navigate("/marketplace")}
+                className="rounded-lg bg-[#25231f] px-6 py-3 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-[#c65d45]"
+              >
                 Explore Marketplace →
               </button>
 
-              <button className="rounded-lg border border-[#cfc5b8] bg-[#faf8f3]/70 px-6 py-3 text-sm font-semibold text-[#625e57] transition hover:border-[#c65d45] hover:text-[#c65d45]">
+              <button
+                onClick={() => navigate("/sell")}
+                className="rounded-lg border border-[#cfc5b8] bg-[#faf8f3]/70 px-6 py-3 text-sm font-semibold text-[#625e57] transition hover:border-[#c65d45] hover:text-[#c65d45]"
+              >
                 Sell an Item
               </button>
 
             </div>
 
           </div>
-
 
           {/* HERO COLLAGE */}
 
@@ -184,7 +181,6 @@ function Home() {
 
             </div>
 
-
             <div className="absolute -bottom-4 -left-1 w-44 overflow-hidden rounded-2xl border-[5px] border-[#f5f1e9] shadow-xl">
 
               <img
@@ -194,7 +190,6 @@ function Home() {
               />
 
             </div>
-
 
             <div className="absolute -right-2 top-7 rounded-2xl border border-[#d4c9bb] bg-[#faf8f3]/90 px-4 py-3 shadow-lg backdrop-blur">
 
@@ -213,7 +208,6 @@ function Home() {
         </div>
 
       </section>
-
 
       {/* CATEGORIES */}
 
@@ -236,13 +230,11 @@ function Home() {
             <div>
 
               <div className="mb-2 flex items-center gap-3">
-
                 <span className="h-px w-7 bg-[#c65d45]" />
 
                 <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[#c65d45]">
                   Explore
                 </p>
-
               </div>
 
               <h2 className="text-3xl font-bold tracking-[-0.04em] text-[#25231f] md:text-4xl">
@@ -256,20 +248,29 @@ function Home() {
 
             </div>
 
-            <button className="w-fit text-sm font-semibold text-[#c65d45]">
+            <button
+              onClick={() => navigate("/marketplace")}
+              className="w-fit text-sm font-semibold text-[#c65d45]"
+            >
               View everything →
             </button>
 
           </div>
 
-
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
 
             {categories.map((category, index) => (
 
-              <div
+              <button
                 key={category.name}
-                className="group overflow-hidden rounded-2xl border border-[#d2c8ba] bg-[#faf8f3] transition duration-500 hover:-translate-y-1 hover:shadow-xl hover:shadow-[#5a4438]/10"
+                onClick={() =>
+                  navigate(
+                    `/marketplace?category=${encodeURIComponent(
+                      category.name
+                    )}`
+                  )
+                }
+                className="group overflow-hidden rounded-2xl border border-[#d2c8ba] bg-[#faf8f3] text-left transition duration-500 hover:-translate-y-1 hover:shadow-xl hover:shadow-[#5a4438]/10"
               >
 
                 <div className="relative h-48 overflow-hidden">
@@ -288,11 +289,9 @@ function Home() {
 
                 </div>
 
-
                 <div className="flex items-center justify-between p-4">
 
                   <div>
-
                     <h3 className="text-sm font-semibold text-[#25231f]">
                       {category.name}
                     </h3>
@@ -300,7 +299,6 @@ function Home() {
                     <p className="mt-1 text-[11px] text-[#817b72]">
                       {category.count}
                     </p>
-
                   </div>
 
                   <span className="flex h-8 w-8 items-center justify-center rounded-full border border-[#d7cdbf] text-sm text-[#c65d45] transition group-hover:bg-[#c65d45] group-hover:text-white">
@@ -309,7 +307,7 @@ function Home() {
 
                 </div>
 
-              </div>
+              </button>
 
             ))}
 
@@ -318,7 +316,6 @@ function Home() {
         </div>
 
       </section>
-
 
       {/* FRESH LISTINGS */}
 
@@ -339,13 +336,11 @@ function Home() {
             <div>
 
               <div className="mb-2 flex items-center gap-3">
-
                 <span className="h-px w-7 bg-[#c65d45]" />
 
                 <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[#c65d45]">
                   Recently listed
                 </p>
-
               </div>
 
               <h2 className="text-3xl font-bold tracking-[-0.04em] text-[#25231f] md:text-4xl">
@@ -358,19 +353,21 @@ function Home() {
 
             </div>
 
-            <button className="hidden text-sm font-semibold text-[#c65d45] sm:block">
+            <button
+              onClick={() => navigate("/marketplace")}
+              className="hidden text-sm font-semibold text-[#c65d45] sm:block"
+            >
               Browse all →
             </button>
 
           </div>
 
-
           <div className="grid gap-5 md:grid-cols-3">
 
             {products.map((product) => (
               <ProductCard
-                key={product.title}
-                {...product}
+                key={product.id}
+                product={product}
               />
             ))}
 
@@ -379,7 +376,6 @@ function Home() {
         </div>
 
       </section>
-
 
       {/* HOW IT WORKS */}
 
@@ -406,12 +402,10 @@ function Home() {
             </h2>
 
             <p className="mx-auto mt-2 max-w-lg text-sm leading-6 text-[#706a62]">
-              Find something, connect with a student and
-              make the exchange.
+              Find something, meet on campus and complete the exchange.
             </p>
 
           </div>
-
 
           <div className="relative">
 
@@ -434,7 +428,6 @@ function Home() {
 
                   </div>
 
-
                   <h3 className="mt-6 text-lg font-bold text-[#25231f]">
                     {step.title}
                   </h3>
@@ -455,14 +448,11 @@ function Home() {
 
       </section>
 
-
       {/* SELL AN ITEM */}
 
       <section className="mx-auto max-w-7xl px-6 pb-16">
 
         <div className="group relative flex min-h-[240px] items-center justify-center overflow-hidden rounded-[28px] border border-[#4c4841] bg-[#302e2a] shadow-xl">
-
-          {/* BACKGROUND IMAGE */}
 
           <div
             className="absolute inset-0 bg-cover bg-center transition duration-700 group-hover:scale-105"
@@ -472,14 +462,9 @@ function Home() {
             }}
           />
 
-          {/* DARK IMAGE OVERLAY */}
-
           <div className="absolute inset-0 bg-[#25231f]/70" />
 
           <div className="absolute inset-0 bg-gradient-to-b from-[#25231f]/45 via-[#25231f]/65 to-[#25231f]/80" />
-
-
-          {/* CENTER CONTENT */}
 
           <div className="relative z-10 flex max-w-2xl flex-col items-center px-6 py-12 text-center">
 
@@ -487,8 +472,10 @@ function Home() {
               Give it a second life
             </p>
 
-
-            <button className="mt-4 flex items-center gap-4 text-4xl font-bold tracking-[-0.05em] text-white transition duration-300 hover:text-[#e4775e] md:text-6xl">
+            <button
+              onClick={() => navigate("/sell")}
+              className="mt-4 flex items-center gap-4 text-4xl font-bold tracking-[-0.05em] text-white transition duration-300 hover:text-[#e4775e] md:text-6xl"
+            >
 
               <span>
                 Sell an Item
@@ -499,7 +486,6 @@ function Home() {
               </span>
 
             </button>
-
 
             <p className="mt-5 max-w-lg text-sm leading-6 text-[#ddd6cc] md:text-[15px]">
               Turn things you no longer need into something
@@ -517,4 +503,3 @@ function Home() {
 }
 
 export default Home
-

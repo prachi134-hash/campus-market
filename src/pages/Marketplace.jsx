@@ -1,4 +1,5 @@
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
+import { useSearchParams } from "react-router-dom"
 import ProductCard from "../components/ProductCard"
 
 const products = [
@@ -121,11 +122,46 @@ const conditions = [
 ]
 
 function Marketplace() {
+  const [searchParams, setSearchParams] = useSearchParams()
+
+  const categoryFromUrl = searchParams.get("category")
+
   const [search, setSearch] = useState("")
-  const [category, setCategory] = useState("All")
+  const [category, setCategory] = useState(
+    categories.includes(categoryFromUrl)
+      ? categoryFromUrl
+      : "All"
+  )
   const [condition, setCondition] = useState("All")
   const [sort, setSort] = useState("Newest")
   const [showFilters, setShowFilters] = useState(false)
+
+  /*
+    Keep the selected category synchronized
+    with the URL.
+  */
+  useEffect(() => {
+    if (categories.includes(categoryFromUrl)) {
+      setCategory(categoryFromUrl)
+    } else {
+      setCategory("All")
+    }
+  }, [categoryFromUrl])
+
+  /*
+    Change category AND update the URL.
+  */
+  const handleCategoryChange = (newCategory) => {
+    setCategory(newCategory)
+
+    if (newCategory === "All") {
+      setSearchParams({})
+    } else {
+      setSearchParams({
+        category: newCategory,
+      })
+    }
+  }
 
   const filteredProducts = useMemo(() => {
     let result = [...products]
@@ -198,7 +234,7 @@ function Marketplace() {
             {categories.map((item) => (
               <button
                 key={item}
-                onClick={() => setCategory(item)}
+                onClick={() => handleCategoryChange(item)}
                 className={`shrink-0 rounded-full px-3.5 py-2 text-[10px] font-bold transition ${
                   category === item
                     ? "bg-[#302e2a] text-[#faf8f3]"
@@ -266,6 +302,7 @@ function Marketplace() {
                     onClick={() => {
                       setCategory("All")
                       setCondition("All")
+                      setSearchParams({})
                     }}
                     className="text-[9px] font-bold text-[#c65d45]"
                   >
@@ -285,7 +322,7 @@ function Marketplace() {
                   {categories.slice(1).map((item) => (
                     <button
                       key={item}
-                      onClick={() => setCategory(item)}
+                      onClick={() => handleCategoryChange(item)}
                       className={`block w-full rounded-lg px-2.5 py-2 text-left text-xs ${
                         category === item
                           ? "bg-[#f1e4dc] font-bold text-[#c65d45]"
@@ -394,6 +431,7 @@ function Marketplace() {
                       setSearch("")
                       setCategory("All")
                       setCondition("All")
+                      setSearchParams({})
                     }}
                     className="mt-4 rounded-full bg-[#c65d45] px-5 py-2.5 text-[10px] font-bold text-white"
                   >

@@ -1,25 +1,20 @@
 import { useNavigate } from "react-router-dom"
 import { useCart } from "../context/CartContext"
+import { useWishlist } from "../context/WishlistContext"
 
-function ProductCard({
-  product,
-  id,
-  title,
-  price,
-  category,
-  condition,
-  location,
-  time,
-  image,
-}) {
+function ProductCard({ product, ...legacyProps }) {
   const navigate = useNavigate()
+
   const { addToCart } = useCart()
 
-  // Supports both:
-  // <ProductCard product={product} />
-  // and the older:
-  // <ProductCard title="" price="" image="" ... />
-  const item = product || {
+  const {
+    toggleWishlist,
+    isInWishlist,
+  } = useWishlist()
+
+  const item = product || legacyProps
+
+  const {
     id,
     title,
     price,
@@ -28,30 +23,31 @@ function ProductCard({
     location,
     time,
     image,
-  }
+  } = item
 
-  const isLoggedIn =
-    localStorage.getItem("campusMarketUser") !== null
+  const wishlisted = isInWishlist(id)
 
-  const handleAdd = (e) => {
-    e.stopPropagation()
+  const handleAdd = (event) => {
+    event.stopPropagation()
 
-    if (!isLoggedIn) {
-      navigate("/login", {
-        state: {
-          from: "/marketplace",
-        },
-      })
+    const user = localStorage.getItem("campusMarketUser")
+
+    if (!user) {
+      navigate("/login")
       return
     }
 
     addToCart(item)
   }
 
-  const handleProductClick = () => {
-    if (!item?.id) return
+  const handleWishlist = (event) => {
+    event.stopPropagation()
 
-    navigate(`/product/${item.id}`, {
+    toggleWishlist(item)
+  }
+
+  const handleProductClick = () => {
+    navigate(`/product/${id}`, {
       state: {
         product: item,
       },
@@ -61,75 +57,78 @@ function ProductCard({
   return (
     <article
       onClick={handleProductClick}
-      className="group cursor-pointer overflow-hidden rounded-xl border border-[#ddd4c7] bg-[#faf8f3] transition duration-200 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-[#4b382f]/10"
+      className="group cursor-pointer overflow-hidden rounded-2xl border border-[#ddd4c7] bg-white"
     >
-      <div className="relative aspect-square overflow-hidden bg-[#e9e2d7]">
 
-        {item.image ? (
-          <img
-            src={item.image}
-            alt={item.title || "Campus Market item"}
-            className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
-          />
-        ) : (
-          <div className="flex h-full items-center justify-center text-xs text-[#938b80]">
-            No image
-          </div>
-        )}
+      {/* Product Image */}
+      <div className="relative aspect-[4/3] overflow-hidden bg-[#eee9e0]">
 
+        <img
+          src={image}
+          alt={title}
+          className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.02]"
+        />
+
+        {/* Wishlist */}
         <button
-          onClick={(e) => e.stopPropagation()}
-          className="absolute right-2.5 top-2.5 flex h-7 w-7 items-center justify-center rounded-full bg-[#faf8f3]/90 text-[#625e57] backdrop-blur"
-          aria-label="Save item"
+          onClick={handleWishlist}
+          className={`absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full bg-white/95 text-lg shadow-sm transition ${
+            wishlisted
+              ? "text-[#c65d45]"
+              : "text-[#716b63] hover:text-[#c65d45]"
+          }`}
+          aria-label={
+            wishlisted
+              ? "Remove from wishlist"
+              : "Add to wishlist"
+          }
         >
-          ♡
+          {wishlisted ? "♥" : "♡"}
         </button>
+
+        {/* Condition */}
+        <span className="absolute bottom-3 left-3 rounded-full bg-white/95 px-3 py-1 text-[11px] font-medium text-[#302e2a]">
+          {condition}
+        </span>
+
       </div>
 
-      <div className="p-3">
+      {/* Product Information */}
+      <div className="p-4">
 
-        <div className="flex items-center justify-between gap-2">
-          <span className="truncate text-[9px] font-bold uppercase tracking-[0.08em] text-[#c65d45]">
-            {item.condition || "Good"}
+        <div className="mb-2 flex items-center justify-between gap-3">
+          <span className="text-[11px] font-medium uppercase tracking-wide text-[#8b8378]">
+            {category}
           </span>
 
-          {item.time && (
-            <span className="shrink-0 text-[9px] text-[#938b80]">
-              {item.time}
-            </span>
-          )}
+          <span className="text-[11px] text-[#8b8378]">
+            {time}
+          </span>
         </div>
 
-        <h3 className="mt-1.5 line-clamp-2 min-h-[32px] text-[12px] font-semibold leading-4 text-[#302e2a]">
-          {item.title || "Campus item"}
+        <h3 className="line-clamp-2 text-base font-semibold text-[#302e2a]">
+          {title}
         </h3>
 
-        <div className="mt-2.5 flex items-center justify-between gap-2">
+        <p className="mt-2 text-lg font-semibold text-[#20201e]">
+          ₹{price}
+        </p>
 
-          <div>
-            <p className="text-[16px] font-bold leading-none text-[#25231f]">
-              ₹{Number(item.price || 0).toLocaleString("en-IN")}
-            </p>
-
-            {item.location && (
-              <p className="mt-1 truncate text-[9px] text-[#817b72]">
-                {item.location}
-              </p>
-            )}
-          </div>
-
-          <button
-            onClick={handleAdd}
-            className="flex h-8 min-w-[42px] items-center justify-center rounded-lg border border-[#c65d45] bg-[#faf8f3] px-3 text-[10px] font-extrabold uppercase tracking-wide text-[#c65d45] transition hover:bg-[#c65d45] hover:text-white"
-          >
-            ADD
-          </button>
-
+        <div className="mt-2 text-xs text-[#716b63]">
+          {location}
         </div>
+
+        <button
+          onClick={handleAdd}
+          className="mt-4 w-full rounded-full bg-[#302e2a] px-4 py-2.5 text-sm font-medium text-white transition hover:bg-[#45413b]"
+        >
+          Add to Cart
+        </button>
+
       </div>
+
     </article>
   )
 }
 
 export default ProductCard
-
