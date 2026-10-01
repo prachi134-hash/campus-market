@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react"
 import { Link } from "react-router-dom"
+import API_URL from "../lib/api"
 
 function Orders() {
   const [orders, setOrders] = useState([])
@@ -21,7 +22,7 @@ function Orders() {
       }
 
       const response = await fetch(
-        "http://localhost:5000/api/orders",
+        `${API_URL}/api/orders`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -190,7 +191,7 @@ function OrderGroup({
       }
 
       const response = await fetch(
-        "http://localhost:5000/api/payments/mock",
+        `${API_URL}/api/payments/mock`,
         {
           method: "POST",
 
@@ -232,8 +233,6 @@ function OrderGroup({
   return (
     <article className="overflow-hidden rounded-2xl border border-[#d4cabc] bg-[#faf8f3]">
 
-      {/* Order header */}
-
       <div className="border-b border-[#ded6ca] px-5 py-4 sm:px-6">
 
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -272,8 +271,6 @@ function OrderGroup({
 
       </div>
 
-      {/* Order items */}
-
       <div className="divide-y divide-[#ded6ca]">
 
         {order.items.map((item) => (
@@ -284,8 +281,6 @@ function OrderGroup({
         ))}
 
       </div>
-
-      {/* Payment section */}
 
       <div className="border-t border-[#ded6ca] bg-[#f7f4ee] p-5 sm:p-6">
 

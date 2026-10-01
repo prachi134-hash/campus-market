@@ -1,6 +1,6 @@
-
 import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
+import API_URL from "../lib/api"
 
 const defaultProfile = {
   name: "",
@@ -38,7 +38,7 @@ function Profile() {
 
       try {
         const response = await fetch(
-          "http://localhost:5000/api/auth/profile",
+          `${API_URL}/api/auth/profile`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -137,7 +137,7 @@ function Profile() {
 
     try {
       const response = await fetch(
-        "http://localhost:5000/api/auth/profile",
+        `${API_URL}/api/auth/profile`,
         {
           method: "PATCH",
           headers: {
@@ -250,7 +250,7 @@ function Profile() {
 
     try {
       const response = await fetch(
-        "http://localhost:5000/api/auth/password",
+        `${API_URL}/api/auth/password`,
         {
           method: "PATCH",
           headers: {
@@ -919,4 +919,3 @@ function Profile() {
 }
 
 export default Profile
-

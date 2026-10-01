@@ -2,6 +2,7 @@ import { useEffect, useState } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 import { useCart } from "../context/CartContext"
 import { useWishlist } from "../context/WishlistContext"
+import API_URL from "../lib/api"
 
 function ProductDetails() {
   const { id } = useParams()
@@ -23,7 +24,7 @@ function ProductDetails() {
     const fetchProduct = async () => {
       try {
         const response = await fetch(
-          `http://localhost:5000/api/products/${id}`
+          `${API_URL}/api/products/${id}`
         )
 
         if (!response.ok) {

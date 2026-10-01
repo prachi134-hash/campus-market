@@ -1,6 +1,6 @@
-
 import { useState } from "react"
 import { Link, useNavigate } from "react-router-dom"
+import API_URL from "../lib/api"
 
 function Signup() {
   const navigate = useNavigate()
@@ -53,7 +53,7 @@ function Signup() {
       setLoading(true)
 
       const response = await fetch(
-        "http://localhost:5000/api/auth/signup",
+        `${API_URL}/api/auth/signup`,
         {
           method: "POST",
           headers: {
@@ -351,4 +351,3 @@ function Signup() {
 }
 
 export default Signup
-

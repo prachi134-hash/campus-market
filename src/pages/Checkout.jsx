@@ -1,6 +1,7 @@
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { useCart } from "../context/CartContext"
+import API_URL from "../lib/api"
 
 function Checkout() {
   const navigate = useNavigate()
@@ -36,7 +37,7 @@ function Checkout() {
       }))
 
       const response = await fetch(
-        "http://localhost:5000/api/orders",
+        `${API_URL}/api/orders`,
         {
           method: "POST",
 

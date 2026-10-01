@@ -1,5 +1,6 @@
 import { useState } from "react"
 import { supabase } from "../lib/supabaseClient"
+import API_URL from "../lib/api"
 
 function Sell() {
   const [formData, setFormData] = useState({
@@ -13,8 +14,6 @@ function Sell() {
 
   const [imagePreview, setImagePreview] = useState(null)
 
-  // Temporary frontend data.
-  // Later this will come from the seller's college in MongoDB.
   const meetupLocations = [
     "Main Gate",
     "Library",
@@ -41,7 +40,6 @@ function Sell() {
     e.preventDefault()
 
     try {
-      // Check whether the user is logged in
       const token = localStorage.getItem("campusMarketToken")
 
       if (!token) {
@@ -49,7 +47,6 @@ function Sell() {
         return
       }
 
-      // Get selected image
       const fileInput = document.querySelector(
         'input[type="file"]'
       )
@@ -61,10 +58,8 @@ function Sell() {
         return
       }
 
-      // Create a unique file name
       const fileName = `${Date.now()}-${file.name}`
 
-      // Upload image to Supabase Storage
       const { error: uploadError } = await supabase.storage
         .from("product-images")
         .upload(fileName, file)
@@ -73,16 +68,14 @@ function Sell() {
         throw uploadError
       }
 
-      // Get public image URL
       const { data: publicUrlData } = supabase.storage
         .from("product-images")
         .getPublicUrl(fileName)
 
       const imageUrl = publicUrlData.publicUrl
 
-      // Send product data + JWT to backend
       const response = await fetch(
-        "http://localhost:5000/api/products",
+        `${API_URL}/api/products`,
         {
           method: "POST",
 
@@ -148,7 +141,6 @@ function Sell() {
 
       setImagePreview(null)
 
-      // Clear selected file
       fileInput.value = ""
     } catch (error) {
       console.error("Create listing error:", error)
@@ -163,7 +155,6 @@ function Sell() {
   return (
     <main className="relative min-h-screen overflow-hidden bg-[#f5f1e9]">
 
-      {/* Global Background */}
       <div
         className="pointer-events-none fixed inset-0 z-0 bg-cover bg-center opacity-[0.025]"
         style={{
@@ -172,9 +163,6 @@ function Sell() {
         }}
       />
 
-      {/* =====================================================
-          COMPACT PAGE INTRO
-      ===================================================== */}
       <section className="relative overflow-hidden border-b border-[#d9d0c3]">
 
         <div
@@ -209,18 +197,12 @@ function Sell() {
         </div>
       </section>
 
-      {/* =====================================================
-          LISTING SECTION
-      ===================================================== */}
       <section className="relative z-10 mx-auto max-w-6xl px-6 py-12 md:py-16">
 
         <div className="overflow-hidden rounded-[28px] border border-[#d4cabc] bg-[#faf8f3] shadow-[0_18px_60px_rgba(68,52,42,0.07)]">
 
           <div className="grid lg:grid-cols-[0.8fr_1.2fr]">
 
-            {/* =================================================
-                LEFT — PHOTO UPLOAD
-            ================================================= */}
             <div className="border-b border-[#d8cfc2] bg-[#eee8dd] p-6 md:p-8 lg:border-b-0 lg:border-r">
 
               <div className="flex h-full flex-col">
@@ -240,7 +222,6 @@ function Sell() {
                   </p>
                 </div>
 
-                {/* Upload Box */}
                 <label className="group relative mt-7 flex min-h-[300px] cursor-pointer items-center justify-center overflow-hidden rounded-2xl border border-dashed border-[#c5b9aa] bg-[#f5f1e9] transition duration-300 hover:border-[#c65d45] hover:bg-[#f1ebe2]">
 
                   {imagePreview ? (
@@ -327,12 +308,8 @@ function Sell() {
 
             </div>
 
-            {/* =================================================
-                RIGHT — LISTING FORM
-            ================================================= */}
             <div className="p-6 md:p-8 lg:p-10">
 
-              {/* Form Header */}
               <div className="border-b border-[#ded6ca] pb-6">
 
                 <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#c65d45]">
@@ -359,13 +336,11 @@ function Sell() {
 
               </div>
 
-              {/* Form */}
               <form
                 onSubmit={handleSubmit}
                 className="mt-7 space-y-5"
               >
 
-                {/* Item Title */}
                 <div>
 
                   <label
@@ -388,7 +363,6 @@ function Sell() {
 
                 </div>
 
-                {/* Category + Price */}
                 <div className="grid gap-5 sm:grid-cols-2">
 
                   <div>
@@ -451,7 +425,6 @@ function Sell() {
 
                 </div>
 
-                {/* Condition + Meetup Location */}
                 <div className="grid gap-5 sm:grid-cols-2">
 
                   <div>
@@ -511,7 +484,6 @@ function Sell() {
 
                 </div>
 
-                {/* Meetup Information */}
                 <div className="rounded-xl border border-[#ddd4c7] bg-[#f5f1e9] px-4 py-3.5">
 
                   <div className="flex items-start gap-3">
@@ -535,7 +507,6 @@ function Sell() {
 
                 </div>
 
-                {/* Description */}
                 <div>
 
                   <div className="mb-2 flex items-center justify-between">
@@ -565,7 +536,6 @@ function Sell() {
 
                 </div>
 
-                {/* Submit */}
                 <div className="flex flex-col gap-4 border-t border-[#ded6ca] pt-6 sm:flex-row sm:items-center sm:justify-between">
 
                   <p className="max-w-xs text-[10px] leading-5 text-[#817b72]">
@@ -596,7 +566,6 @@ function Sell() {
 
       </section>
 
-      {/* Bottom Note */}
       <div className="relative z-10 mx-auto max-w-6xl px-6 pb-12">
 
         <div className="flex items-center gap-4 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#817b72]">

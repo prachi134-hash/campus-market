@@ -1,6 +1,6 @@
-
 import { useEffect, useState } from "react"
 import { Link } from "react-router-dom"
+import API_URL from "../lib/api"
 
 function SellerOrders() {
   const [orders, setOrders] = useState([])
@@ -20,7 +20,7 @@ function SellerOrders() {
       }
 
       const response = await fetch(
-        "http://localhost:5000/api/orders/seller",
+        `${API_URL}/api/orders/seller`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -68,7 +68,7 @@ function SellerOrders() {
       )
 
       const response = await fetch(
-        `http://localhost:5000/api/orders/${orderId}/items/${itemId}/confirm`,
+        `${API_URL}/api/orders/${orderId}/items/${itemId}/confirm`,
         {
           method: "PATCH",
           headers: {
@@ -117,7 +117,7 @@ function SellerOrders() {
       )
 
       const response = await fetch(
-        `http://localhost:5000/api/orders/${orderId}/items/${itemId}/complete`,
+        `${API_URL}/api/orders/${orderId}/items/${itemId}/complete`,
         {
           method: "PATCH",
           headers: {
@@ -174,7 +174,7 @@ function SellerOrders() {
       )
 
       const response = await fetch(
-        `http://localhost:5000/api/orders/${orderId}/items/${itemId}/cancel`,
+        `${API_URL}/api/orders/${orderId}/items/${itemId}/cancel`,
         {
           method: "PATCH",
           headers: {

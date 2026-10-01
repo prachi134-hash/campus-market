@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react"
 import { Link, useNavigate, useParams } from "react-router-dom"
 import { supabase } from "../lib/supabaseClient"
+import API_URL from "../lib/api"
 
 const categories = [
   "Books & Notes",
@@ -59,7 +60,7 @@ function EditListing() {
         }
 
         const response = await fetch(
-          `http://localhost:5000/api/products/${id}`,
+          `${API_URL}/api/products/${id}`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -167,7 +168,7 @@ function EditListing() {
       const imageUrl = await uploadNewImage()
 
       const response = await fetch(
-        `http://localhost:5000/api/products/${id}`,
+        `${API_URL}/api/products/${id}`,
         {
           method: "PUT",
 
@@ -239,7 +240,7 @@ function EditListing() {
       }
 
       const response = await fetch(
-        `http://localhost:5000/api/products/${id}`,
+        `${API_URL}/api/products/${id}`,
         {
           method: "DELETE",
 

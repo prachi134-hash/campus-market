@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react"
 import { useSearchParams } from "react-router-dom"
 import ProductCard from "../components/ProductCard"
+import API_URL from "../lib/api"
 
 const categories = [
   "All",
@@ -38,10 +39,6 @@ function Marketplace() {
   const [sort, setSort] = useState("Newest")
   const [showFilters, setShowFilters] = useState(false)
 
-  /*
-    Keep the selected category synchronized
-    with the URL.
-  */
   useEffect(() => {
     if (categories.includes(categoryFromUrl)) {
       setCategory(categoryFromUrl)
@@ -50,13 +47,6 @@ function Marketplace() {
     }
   }, [categoryFromUrl])
 
-  /*
-    Fetch products from the backend.
-
-    Search, category, condition and sorting
-    are now handled by MongoDB through
-    the backend API.
-  */
   useEffect(() => {
     const fetchProducts = async () => {
       try {
@@ -88,7 +78,7 @@ function Marketplace() {
         const queryString = params.toString()
 
         const response = await fetch(
-          `http://localhost:5000/api/products${
+          `${API_URL}/api/products${
             queryString ? `?${queryString}` : ""
           }`
         )
@@ -112,10 +102,6 @@ function Marketplace() {
       }
     }
 
-    /*
-      Small delay for search typing so we don't
-      send a request for every single keystroke.
-    */
     const timer = setTimeout(() => {
       fetchProducts()
     }, 300)
@@ -123,9 +109,6 @@ function Marketplace() {
     return () => clearTimeout(timer)
   }, [search, category, condition, sort])
 
-  /*
-    Change category AND update the URL.
-  */
   const handleCategoryChange = (newCategory) => {
     setCategory(newCategory)
 
@@ -138,9 +121,6 @@ function Marketplace() {
     }
   }
 
-  /*
-    Clear all filters.
-  */
   const clearFilters = () => {
     setSearch("")
     setCategory("All")
@@ -151,8 +131,6 @@ function Marketplace() {
 
   return (
     <main className="min-h-screen bg-[#f5f1e9] text-[#25231f]">
-
-      {/* Search + categories */}
 
       <section className="sticky top-[68px] z-30 border-b border-[#ddd4c7] bg-[#f5f1e9]/95 backdrop-blur-md">
 
@@ -199,11 +177,7 @@ function Marketplace() {
         </div>
       </section>
 
-      {/* Main */}
-
       <section className="mx-auto max-w-[1500px] px-3 py-5 sm:px-5 sm:py-7 lg:px-7">
-
-        {/* Mobile toolbar */}
 
         <div className="mb-4 flex items-center justify-between lg:hidden">
 
@@ -234,8 +208,6 @@ function Marketplace() {
         </div>
 
         <div className="grid gap-7 lg:grid-cols-[190px_minmax(0,1fr)]">
-
-          {/* Desktop filters */}
 
           <aside className="hidden lg:block">
 
@@ -332,8 +304,6 @@ function Marketplace() {
             </div>
           </aside>
 
-          {/* Products */}
-
           <div>
 
             <div className="mb-5 hidden items-end justify-between lg:flex">
@@ -373,7 +343,7 @@ function Marketplace() {
                     {error}
                   </p>
 
-                  <p className="mt-1 text-xs text-[#817b72]">
+                  <p className="mt-1 text-xs text-[#817b0a]">
                     Please make sure the backend is running.
                   </p>
                 </div>
@@ -412,8 +382,6 @@ function Marketplace() {
 
         </div>
       </section>
-
-      {/* Mobile filter sheet */}
 
       {showFilters && (
         <div className="fixed inset-0 z-[70] lg:hidden">

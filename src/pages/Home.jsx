@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import ProductCard from "../components/ProductCard"
+import API_URL from "../lib/api"
 
 function Home() {
   const navigate = useNavigate()
@@ -12,7 +13,7 @@ function Home() {
     const fetchProducts = async () => {
       try {
         const response = await fetch(
-          "http://localhost:5000/api/products"
+          `${API_URL}/api/products`
         )
 
         if (!response.ok) {
@@ -86,8 +87,6 @@ function Home() {
   return (
     <main className="relative overflow-hidden bg-[#f5f1e9]">
 
-      {/* GLOBAL BACKGROUND */}
-
       <div
         className="pointer-events-none fixed inset-0 -z-10 bg-cover bg-center opacity-[0.045]"
         style={{
@@ -97,8 +96,6 @@ function Home() {
       />
 
       <div className="pointer-events-none fixed inset-0 -z-10 bg-[#f5f1e9]/85" />
-
-      {/* HERO */}
 
       <section className="relative overflow-hidden border-b border-[#d9d0c3]">
 
@@ -164,8 +161,6 @@ function Home() {
 
           </div>
 
-          {/* HERO COLLAGE */}
-
           <div className="relative mx-auto w-full max-w-[500px]">
 
             <div className="relative ml-auto h-[380px] w-[88%] overflow-hidden rounded-[26px] border-[7px] border-[#faf8f3] shadow-2xl">
@@ -207,8 +202,6 @@ function Home() {
         </div>
 
       </section>
-
-      {/* CATEGORIES */}
 
       <section className="relative overflow-hidden py-16">
 
@@ -316,8 +309,6 @@ function Home() {
 
       </section>
 
-      {/* FRESH LISTINGS */}
-
       <section className="relative overflow-hidden border-y border-[#d5cabc] bg-[#ebe5db] py-16">
 
         <div
@@ -361,8 +352,6 @@ function Home() {
 
           </div>
 
-          {/* DYNAMIC PRODUCTS */}
-
           {loadingProducts ? (
             <div className="flex min-h-[250px] items-center justify-center rounded-2xl border border-[#d4cabc] bg-[#faf8f3]/70">
               <p className="text-sm text-[#817b72]">
@@ -404,8 +393,6 @@ function Home() {
         </div>
 
       </section>
-
-      {/* HOW IT WORKS */}
 
       <section className="relative overflow-hidden py-16">
 
@@ -475,8 +462,6 @@ function Home() {
         </div>
 
       </section>
-
-      {/* SELL AN ITEM */}
 
       <section className="mx-auto max-w-7xl px-6 pb-16">
 

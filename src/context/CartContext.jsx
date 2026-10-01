@@ -4,6 +4,7 @@ import {
   useEffect,
   useState,
 } from "react"
+import API_URL from "../lib/api"
 
 const CartContext = createContext()
 
@@ -31,7 +32,7 @@ export function CartProvider({ children }) {
       }
 
       const response = await fetch(
-        "http://localhost:5000/api/cart",
+        `${API_URL}/api/cart`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -94,7 +95,7 @@ export function CartProvider({ children }) {
         product._id || product.id
 
       const response = await fetch(
-        "http://localhost:5000/api/cart",
+        `${API_URL}/api/cart`,
         {
           method: "POST",
 
@@ -144,7 +145,7 @@ export function CartProvider({ children }) {
       }
 
       const response = await fetch(
-        `http://localhost:5000/api/cart/${productId}`,
+        `${API_URL}/api/cart/${productId}`,
         {
           method: "DELETE",
 
@@ -187,7 +188,7 @@ export function CartProvider({ children }) {
 
       for (const item of currentItems) {
         await fetch(
-          `http://localhost:5000/api/cart/${item.id}`,
+          `${API_URL}/api/cart/${item.id}`,
           {
             method: "DELETE",
 

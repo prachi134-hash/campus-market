@@ -1,5 +1,6 @@
 import { useState } from "react"
 import { Link, useLocation, useNavigate } from "react-router-dom"
+import API_URL from "../lib/api"
 
 function Login() {
   const navigate = useNavigate()
@@ -27,7 +28,7 @@ function Login() {
       setLoading(true)
 
       const response = await fetch(
-        "http://localhost:5000/api/auth/login",
+        `${API_URL}/api/auth/login`,
         {
           method: "POST",
           headers: {
@@ -48,20 +49,16 @@ function Login() {
         )
       }
 
-      // Store JWT token
       localStorage.setItem(
         "campusMarketToken",
         data.token
       )
 
-      // Store safe user information
-      // Password is NOT stored.
       localStorage.setItem(
         "campusMarketUser",
         JSON.stringify(data.user)
       )
 
-      // Tell Navbar that login state has changed
       window.dispatchEvent(
         new Event("campusMarketAuthChange")
       )
@@ -78,7 +75,6 @@ function Login() {
   return (
     <main className="relative flex min-h-[calc(100vh-68px)] items-center justify-center overflow-hidden bg-[#f5f1e9] px-5 py-12">
 
-      {/* Background */}
       <div
         className="pointer-events-none absolute inset-0 bg-cover bg-center opacity-[0.025]"
         style={{
@@ -89,7 +85,6 @@ function Login() {
 
       <div className="relative z-10 w-full max-w-md">
 
-        {/* Intro */}
         <div className="mb-7 text-center">
 
           <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[#302e2a] text-[#f5f1e9]">
@@ -122,7 +117,6 @@ function Login() {
 
         </div>
 
-        {/* Login Card */}
         <div className="rounded-[24px] border border-[#d4cabc] bg-[#faf8f3] p-6 shadow-[0_18px_60px_rgba(68,52,42,0.08)] sm:p-8">
 
           <form
@@ -130,7 +124,6 @@ function Login() {
             className="space-y-5"
           >
 
-            {/* Email */}
             <div>
 
               <label
@@ -151,7 +144,6 @@ function Login() {
 
             </div>
 
-            {/* Password */}
             <div>
 
               <div className="mb-2 flex items-center justify-between">
@@ -195,14 +187,12 @@ function Login() {
 
             </div>
 
-            {/* Error */}
             {error && (
               <div className="rounded-xl border border-[#d7aaa0] bg-[#f5e5e1] px-4 py-3 text-xs font-medium text-[#9d4938]">
                 {error}
               </div>
             )}
 
-            {/* Submit */}
             <button
               type="submit"
               disabled={loading}

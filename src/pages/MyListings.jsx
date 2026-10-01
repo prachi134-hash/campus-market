@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react"
 import { Link, useNavigate } from "react-router-dom"
+import API_URL from "../lib/api"
 
 function MyListings() {
   const navigate = useNavigate()
@@ -19,7 +20,7 @@ function MyListings() {
         }
 
         const response = await fetch(
-          "http://localhost:5000/api/products/my",
+          `${API_URL}/api/products/my`,
           {
             headers: {
               Authorization: `Bearer ${token}`,

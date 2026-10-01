@@ -4,6 +4,7 @@ import {
     useEffect,
     useState,
 } from "react"
+import API_URL from "../lib/api"
 
 const WishlistContext = createContext()
 
@@ -11,16 +12,12 @@ export function WishlistProvider({ children }) {
     const [wishlist, setWishlist] = useState([])
     const [loading, setLoading] = useState(true)
 
-    // =====================================================
-    // GET WISHLIST FROM BACKEND
-    // =====================================================
     const fetchWishlist = async () => {
         try {
             const token = localStorage.getItem(
                 "campusMarketToken"
             )
 
-            // User is not logged in
             if (!token) {
                 setWishlist([])
                 setLoading(false)
@@ -28,7 +25,7 @@ export function WishlistProvider({ children }) {
             }
 
             const response = await fetch(
-                "http://localhost:5000/api/wishlist",
+                `${API_URL}/api/wishlist`,
                 {
                     headers: {
                         Authorization: `Bearer ${token}`,
@@ -43,12 +40,6 @@ export function WishlistProvider({ children }) {
                     data.message || "Failed to fetch wishlist"
                 )
             }
-
-            // Backend returns:
-            // {
-            //   user: "...",
-            //   products: [...]
-            // }
 
             const products = data.products || []
 
@@ -72,9 +63,6 @@ export function WishlistProvider({ children }) {
         }
     }
 
-    // =====================================================
-    // LOAD WISHLIST WHEN USER LOGS IN
-    // =====================================================
     useEffect(() => {
         fetchWishlist()
 
@@ -95,9 +83,6 @@ export function WishlistProvider({ children }) {
         }
     }, [])
 
-    // =====================================================
-    // CHECK IF PRODUCT IS IN WISHLIST
-    // =====================================================
     const isInWishlist = (productId) => {
         return wishlist.some(
             (item) =>
@@ -106,9 +91,6 @@ export function WishlistProvider({ children }) {
         )
     }
 
-    // =====================================================
-    // ADD TO WISHLIST
-    // =====================================================
     const addToWishlist = async (product) => {
         try {
             const token = localStorage.getItem(
@@ -122,7 +104,7 @@ export function WishlistProvider({ children }) {
             const productId = product._id || product.id
 
             const response = await fetch(
-                "http://localhost:5000/api/wishlist",
+                `${API_URL}/api/wishlist`,
                 {
                     method: "POST",
                     headers: {
@@ -162,9 +144,6 @@ export function WishlistProvider({ children }) {
         }
     }
 
-    // =====================================================
-    // REMOVE FROM WISHLIST
-    // =====================================================
     const removeFromWishlist = async (productId) => {
         try {
             const token = localStorage.getItem(
@@ -176,7 +155,7 @@ export function WishlistProvider({ children }) {
             }
 
             const response = await fetch(
-                `http://localhost:5000/api/wishlist/${productId}`,
+                `${API_URL}/api/wishlist/${productId}`,
                 {
                     method: "DELETE",
                     headers: {
@@ -212,9 +191,6 @@ export function WishlistProvider({ children }) {
         }
     }
 
-    // =====================================================
-    // TOGGLE WISHLIST
-    // =====================================================
     const toggleWishlist = async (product) => {
         const productId = product._id || product.id
 
