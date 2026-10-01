@@ -1,70 +1,219 @@
-import { createContext, useContext, useEffect, useState } from "react"
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+} from "react"
 
 const CartContext = createContext()
 
 export function CartProvider({ children }) {
-  const [cart, setCart] = useState(() => {
-    const savedCart = localStorage.getItem("campusMarketCart")
-    return savedCart ? JSON.parse(savedCart) : []
-  })
+  const [cart, setCart] = useState([])
 
-  useEffect(() => {
-    localStorage.setItem("campusMarketCart", JSON.stringify(cart))
-  }, [cart])
+  const formatCartItems = (items) => {
+    return (items || [])
+      .filter((item) => item.product)
+      .map((item) => ({
+        ...item.product,
+        id: item.product._id,
+      }))
+  }
 
-  const addToCart = (product) => {
-    setCart((currentCart) => {
-      const existing = currentCart.find(
-        (item) => item.id === product.id
+  const fetchCart = async () => {
+    try {
+      const token = localStorage.getItem(
+        "campusMarketToken"
       )
 
-      if (existing) {
-        return currentCart.map((item) =>
-          item.id === product.id
-            ? { ...item, quantity: item.quantity + 1 }
-            : item
+      if (!token) {
+        setCart([])
+        return
+      }
+
+      const response = await fetch(
+        "http://localhost:5000/api/cart",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      )
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(
+          data.message ||
+            "Failed to fetch cart"
         )
       }
 
-      return [
-        ...currentCart,
+      setCart(formatCartItems(data.items))
+    } catch (error) {
+      console.error(
+        "Fetch cart error:",
+        error
+      )
+
+      setCart([])
+    }
+  }
+
+  useEffect(() => {
+    fetchCart()
+
+    const handleAuthChange = () => {
+      fetchCart()
+    }
+
+    window.addEventListener(
+      "campusMarketAuthChange",
+      handleAuthChange
+    )
+
+    return () => {
+      window.removeEventListener(
+        "campusMarketAuthChange",
+        handleAuthChange
+      )
+    }
+  }, [])
+
+  const addToCart = async (product) => {
+    try {
+      const token = localStorage.getItem(
+        "campusMarketToken"
+      )
+
+      if (!token) {
+        alert("Please login to add products to cart.")
+        return false
+      }
+
+      const productId =
+        product._id || product.id
+
+      const response = await fetch(
+        "http://localhost:5000/api/cart",
         {
-          ...product,
-          quantity: 1,
-        },
-      ]
-    })
-  }
+          method: "POST",
 
-  const removeFromCart = (productId) => {
-    setCart((currentCart) =>
-      currentCart.filter((item) => item.id !== productId)
-    )
-  }
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
 
-  const decreaseQuantity = (productId) => {
-    setCart((currentCart) =>
-      currentCart
-        .map((item) =>
-          item.id === productId
-            ? { ...item, quantity: item.quantity - 1 }
-            : item
+          body: JSON.stringify({
+            productId,
+          }),
+        }
+      )
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(
+          data.message ||
+            "Failed to add product to cart"
         )
-        .filter((item) => item.quantity > 0)
-    )
+      }
+
+      setCart(formatCartItems(data.items))
+
+      return true
+    } catch (error) {
+      console.error(
+        "Add to cart error:",
+        error
+      )
+
+      alert(error.message)
+
+      return false
+    }
   }
 
-  const clearCart = () => {
-    setCart([])
+  const removeFromCart = async (productId) => {
+    try {
+      const token = localStorage.getItem(
+        "campusMarketToken"
+      )
+
+      if (!token) {
+        return
+      }
+
+      const response = await fetch(
+        `http://localhost:5000/api/cart/${productId}`,
+        {
+          method: "DELETE",
+
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      )
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(
+          data.message ||
+            "Failed to remove product from cart"
+        )
+      }
+
+      setCart(formatCartItems(data.items))
+    } catch (error) {
+      console.error(
+        "Remove from cart error:",
+        error
+      )
+    }
   }
 
-  const cartCount = cart.reduce(
-    (total, item) => total + item.quantity,
-    0
-  )
+  const clearCart = async () => {
+    try {
+      const token = localStorage.getItem(
+        "campusMarketToken"
+      )
+
+      if (!token) {
+        setCart([])
+        return
+      }
+
+      const currentItems = [...cart]
+
+      for (const item of currentItems) {
+        await fetch(
+          `http://localhost:5000/api/cart/${item.id}`,
+          {
+            method: "DELETE",
+
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        )
+      }
+
+      setCart([])
+    } catch (error) {
+      console.error(
+        "Clear cart error:",
+        error
+      )
+
+      setCart([])
+    }
+  }
+
+  const cartCount = cart.length
 
   const cartTotal = cart.reduce(
-    (total, item) => total + item.price * item.quantity,
+    (total, item) =>
+      total + item.price,
     0
   )
 
@@ -74,7 +223,6 @@ export function CartProvider({ children }) {
         cart,
         addToCart,
         removeFromCart,
-        decreaseQuantity,
         clearCart,
         cartCount,
         cartTotal,

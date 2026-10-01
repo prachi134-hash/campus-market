@@ -1,3 +1,4 @@
+
 import { BrowserRouter, Routes, Route } from "react-router-dom"
 
 import Navbar from "./components/Navbar"
@@ -16,8 +17,11 @@ import Login from "./pages/Login"
 import Signup from "./pages/Signup"
 import Cart from "./pages/Cart"
 import Wishlist from "./pages/Wishlist"
+import Checkout from "./pages/Checkout"
 import Orders from "./pages/Orders"
+import SellerOrders from "./pages/SellerOrders"
 import MyListings from "./pages/MyListings"
+import EditListing from "./pages/EditListing"
 
 function App() {
   return (
@@ -55,6 +59,15 @@ function App() {
             />
 
             <Route
+              path="/checkout"
+              element={
+                <ProtectedRoute>
+                  <Checkout />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
               path="/login"
               element={<Login />}
             />
@@ -81,6 +94,7 @@ function App() {
                 </ProtectedRoute>
               }
             />
+
             <Route
               path="/orders"
               element={
@@ -91,10 +105,28 @@ function App() {
             />
 
             <Route
+              path="/seller-orders"
+              element={
+                <ProtectedRoute>
+                  <SellerOrders />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
               path="/my-listings"
               element={
                 <ProtectedRoute>
                   <MyListings />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/edit-listing/:id"
+              element={
+                <ProtectedRoute>
+                  <EditListing />
                 </ProtectedRoute>
               }
             />
@@ -110,5 +142,4 @@ function App() {
 }
 
 export default App
-
 

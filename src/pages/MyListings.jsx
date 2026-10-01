@@ -1,43 +1,54 @@
-import { Link } from "react-router-dom"
-
-const myListings = [
-  {
-    id: 1,
-    title: "Engineering Mathematics — Vol. 2",
-    price: 450,
-    category: "Books & Notes",
-    condition: "Good",
-    status: "Available",
-    image:
-      "https://images.unsplash.com/photo-1544947950-fa07a98d237f?auto=format&fit=crop&w=900&q=85",
-  },
-  {
-    id: 2,
-    title: "Scientific Calculator",
-    price: 850,
-    category: "Electronics",
-    condition: "Excellent",
-    status: "Available",
-    image:
-      "https://images.unsplash.com/photo-1587145820266-a5951ee6f620?auto=format&fit=crop&w=900&q=85",
-  },
-  {
-    id: 3,
-    title: "Java Programming Notes",
-    price: 250,
-    category: "Books & Notes",
-    condition: "Good",
-    status: "Available",
-    image:
-      "https://images.unsplash.com/photo-1495446815901-a7297e633e8d?auto=format&fit=crop&w=900&q=85",
-  },
-]
+import { useEffect, useState } from "react"
+import { Link, useNavigate } from "react-router-dom"
 
 function MyListings() {
+  const navigate = useNavigate()
+
+  const [myListings, setMyListings] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState("")
+
+  useEffect(() => {
+    const fetchMyListings = async () => {
+      try {
+        const token = localStorage.getItem("campusMarketToken")
+
+        if (!token) {
+          navigate("/login")
+          return
+        }
+
+        const response = await fetch(
+          "http://localhost:5000/api/products/my",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        )
+
+        const data = await response.json()
+
+        if (!response.ok) {
+          throw new Error(
+            data.message || "Failed to fetch your listings"
+          )
+        }
+
+        setMyListings(data)
+      } catch (error) {
+        console.error("My listings error:", error)
+        setError(error.message)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchMyListings()
+  }, [navigate])
+
   return (
     <main className="min-h-screen bg-[#f5f1e9]">
-
-      {/* Header */}
 
       <section className="border-b border-[#d9d0c3]">
 
@@ -84,11 +95,27 @@ function MyListings() {
 
       </section>
 
-      {/* Listings */}
-
       <section className="mx-auto max-w-7xl px-6 py-10">
 
-        {myListings.length === 0 ? (
+        {loading ? (
+          <div className="flex min-h-[380px] items-center justify-center rounded-2xl border border-[#d4cabc] bg-[#faf8f3]">
+            <p className="text-sm text-[#817b72]">
+              Loading your listings...
+            </p>
+          </div>
+        ) : error ? (
+          <div className="flex min-h-[380px] flex-col items-center justify-center rounded-2xl border border-[#d4cabc] bg-[#faf8f3] px-6 text-center">
+
+            <h2 className="text-lg font-bold text-[#302e2a]">
+              Unable to load your listings
+            </h2>
+
+            <p className="mt-2 max-w-sm text-xs leading-5 text-[#817b72]">
+              {error}
+            </p>
+
+          </div>
+        ) : myListings.length === 0 ? (
           <div className="flex min-h-[380px] flex-col items-center justify-center rounded-2xl border border-[#d4cabc] bg-[#faf8f3] px-6 text-center">
 
             <div className="flex h-14 w-14 items-center justify-center rounded-full border border-[#d5cbbd] bg-[#f5f1e9] text-[#817b72]">
@@ -116,8 +143,11 @@ function MyListings() {
 
             {myListings.map((item) => (
               <ListingCard
-                key={item.id}
+                key={item._id}
                 item={item}
+                onEdit={() =>
+                  navigate(`/edit-listing/${item._id}`)
+                }
               />
             ))}
 
@@ -130,21 +160,23 @@ function MyListings() {
   )
 }
 
-/* =========================================================
-   LISTING CARD
-========================================================= */
-
-function ListingCard({ item }) {
+function ListingCard({ item, onEdit }) {
   return (
     <article className="group overflow-hidden rounded-2xl border border-[#d4cabc] bg-[#faf8f3] transition duration-300 hover:-translate-y-1 hover:shadow-[0_18px_40px_rgba(68,52,42,0.09)]">
 
       <div className="relative h-52 overflow-hidden bg-[#e5ded3]">
 
-        <img
-          src={item.image}
-          alt={item.title}
-          className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.04]"
-        />
+        {item.image ? (
+          <img
+            src={item.image}
+            alt={item.title}
+            className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.04]"
+          />
+        ) : (
+          <div className="flex h-full items-center justify-center text-xs text-[#817b72]">
+            No image
+          </div>
+        )}
 
         <div className="absolute left-4 top-4 rounded-full bg-[#faf8f3]/95 px-3 py-1.5 text-[9px] font-bold uppercase tracking-[0.08em] text-[#625e57] backdrop-blur">
           {item.condition}
@@ -166,16 +198,31 @@ function ListingCard({ item }) {
           {item.title}
         </h2>
 
+        {item.seller && (
+          <div className="mt-3">
+
+            <p className="text-xs font-semibold text-[#302e2a]">
+              {item.seller.name}
+            </p>
+
+            <p className="mt-0.5 text-[10px] text-[#817b72]">
+              {item.seller.college}
+            </p>
+
+          </div>
+        )}
+
         <div className="mt-5 flex items-center justify-between">
 
           <p className="text-lg font-bold tracking-[-0.025em] text-[#25231f]">
-            ₹{item.price.toLocaleString("en-IN")}
+            ₹{Number(item.price).toLocaleString("en-IN")}
           </p>
 
           <button
+            onClick={onEdit}
             className="rounded-full border border-[#d4cabc] px-4 py-2 text-[10px] font-bold text-[#625e57] transition hover:border-[#c65d45] hover:text-[#c65d45]"
           >
-            Manage
+            Edit Listing
           </button>
 
         </div>

@@ -1,4 +1,5 @@
 import { useState } from "react"
+import { supabase } from "../lib/supabaseClient"
 
 function Sell() {
   const [formData, setFormData] = useState({
@@ -36,9 +37,127 @@ function Sell() {
     }
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
-    console.log(formData)
+
+    try {
+      // Check whether the user is logged in
+      const token = localStorage.getItem("campusMarketToken")
+
+      if (!token) {
+        alert("Please log in before listing an item.")
+        return
+      }
+
+      // Get selected image
+      const fileInput = document.querySelector(
+        'input[type="file"]'
+      )
+
+      const file = fileInput?.files?.[0]
+
+      if (!file) {
+        alert("Please select an image.")
+        return
+      }
+
+      // Create a unique file name
+      const fileName = `${Date.now()}-${file.name}`
+
+      // Upload image to Supabase Storage
+      const { error: uploadError } = await supabase.storage
+        .from("product-images")
+        .upload(fileName, file)
+
+      if (uploadError) {
+        throw uploadError
+      }
+
+      // Get public image URL
+      const { data: publicUrlData } = supabase.storage
+        .from("product-images")
+        .getPublicUrl(fileName)
+
+      const imageUrl = publicUrlData.publicUrl
+
+      // Send product data + JWT to backend
+      const response = await fetch(
+        "http://localhost:5000/api/products",
+        {
+          method: "POST",
+
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+
+          body: JSON.stringify({
+            title: formData.title,
+
+            price: Number(formData.price),
+
+            category:
+              formData.category === "books"
+                ? "Books & Notes"
+                : formData.category === "electronics"
+                ? "Electronics"
+                : formData.category === "cycles"
+                ? "Cycles"
+                : formData.category === "furniture"
+                ? "Furniture"
+                : formData.category === "clothing"
+                ? "Clothing"
+                : "Other",
+
+            condition:
+              formData.condition === "like-new"
+                ? "Like new"
+                : formData.condition.charAt(0).toUpperCase() +
+                  formData.condition.slice(1),
+
+            description:
+              formData.description || "No description provided.",
+
+            location: formData.location,
+
+            image: imageUrl,
+          }),
+        }
+      )
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(
+          data.message || "Failed to create listing"
+        )
+      }
+
+      console.log("Product created:", data)
+
+      alert("Item listed successfully!")
+
+      setFormData({
+        title: "",
+        category: "",
+        price: "",
+        condition: "",
+        description: "",
+        location: "",
+      })
+
+      setImagePreview(null)
+
+      // Clear selected file
+      fileInput.value = ""
+    } catch (error) {
+      console.error("Create listing error:", error)
+
+      alert(
+        error.message ||
+          "Unable to list item. Please try again."
+      )
+    }
   }
 
   return (
@@ -166,6 +285,7 @@ function Sell() {
                           />
 
                           <path d="m21 15-5-5L5 20" />
+
                         </svg>
 
                       </div>
@@ -384,6 +504,7 @@ function Sell() {
                           {location}
                         </option>
                       ))}
+
                     </select>
 
                   </div>

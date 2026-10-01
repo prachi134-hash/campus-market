@@ -7,8 +7,6 @@ function Cart() {
   const {
     cart,
     removeFromCart,
-    decreaseQuantity,
-    addToCart,
     cartTotal,
   } = useCart()
 
@@ -47,11 +45,8 @@ function Cart() {
 
             {cart.length > 0 && (
               <p className="hidden text-xs font-semibold text-[#817b72] sm:block">
-                {cart.reduce(
-                  (total, item) => total + item.quantity,
-                  0
-                )}{" "}
-                items
+                {cart.length}{" "}
+                {cart.length === 1 ? "item" : "items"}
               </p>
             )}
 
@@ -209,52 +204,20 @@ function Cart() {
 
                         </div>
 
-                        <div className="mt-4 flex items-end justify-between gap-3">
+                        {/* Price */}
+                        <div className="mt-4 flex items-end justify-end">
 
-                          {/* Quantity */}
-                          <div className="flex items-center rounded-lg border border-[#d4cabc] bg-[#f5f1e9]">
-
-                            <button
-                              onClick={() =>
-                                decreaseQuantity(item.id)
-                              }
-                              className="flex h-8 w-8 items-center justify-center text-sm font-bold text-[#625e57] transition hover:text-[#c65d45]"
-                              aria-label="Decrease quantity"
-                            >
-                              −
-                            </button>
-
-                            <span className="flex h-8 min-w-8 items-center justify-center border-x border-[#d4cabc] text-xs font-bold">
-                              {item.quantity}
-                            </span>
-
-                            <button
-                              onClick={() => addToCart(item)}
-                              className="flex h-8 w-8 items-center justify-center text-sm font-bold text-[#625e57] transition hover:text-[#c65d45]"
-                              aria-label="Increase quantity"
-                            >
-                              +
-                            </button>
-
-                          </div>
-
-                          {/* Price */}
                           <div className="text-right">
 
                             <p className="text-[10px] text-[#817b72]">
-                              ₹
-                              {Number(item.price || 0).toLocaleString(
-                                "en-IN"
-                              )}{" "}
-                              each
+                              Individual item
                             </p>
 
                             <p className="mt-0.5 text-base font-bold text-[#25231f]">
                               ₹
-                              {(
-                                Number(item.price || 0) *
-                                item.quantity
-                              ).toLocaleString("en-IN")}
+                              {Number(item.price || 0).toLocaleString(
+                                "en-IN"
+                              )}
                             </p>
 
                           </div>

@@ -1,4 +1,3 @@
-
 import { useState } from "react"
 import { Link, useLocation, useNavigate } from "react-router-dom"
 
@@ -10,10 +9,11 @@ function Login() {
   const [password, setPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState("")
+  const [loading, setLoading] = useState(false)
 
   const from = location.state?.from || "/profile"
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
 
     setError("")
@@ -23,18 +23,43 @@ function Login() {
       return
     }
 
-    const storedUser = localStorage.getItem("campusMarketUser")
+    try {
+      setLoading(true)
 
-    if (storedUser) {
-      const user = JSON.parse(storedUser)
+      const response = await fetch(
+        "http://localhost:5000/api/auth/login",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email,
+            password,
+          }),
+        }
+      )
 
-      if (
-        user.email !== email ||
-        user.password !== password
-      ) {
-        setError("Incorrect email or password.")
-        return
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(
+          data.message || "Invalid email or password."
+        )
       }
+
+      // Store JWT token
+      localStorage.setItem(
+        "campusMarketToken",
+        data.token
+      )
+
+      // Store safe user information
+      // Password is NOT stored.
+      localStorage.setItem(
+        "campusMarketUser",
+        JSON.stringify(data.user)
+      )
 
       // Tell Navbar that login state has changed
       window.dispatchEvent(
@@ -42,35 +67,12 @@ function Login() {
       )
 
       navigate(from, { replace: true })
-      return
+    } catch (error) {
+      console.error("Login error:", error)
+      setError(error.message)
+    } finally {
+      setLoading(false)
     }
-
-    /*
-      Temporary frontend login.
-
-      Real authentication will be connected
-      to Node.js + Express + MongoDB later.
-    */
-
-    const demoUser = {
-      name: "Prachi Manwar",
-      email,
-      password,
-      course: "Computer Engineering",
-      year: "3rd Year",
-    }
-
-    localStorage.setItem(
-      "campusMarketUser",
-      JSON.stringify(demoUser)
-    )
-
-    // Tell Navbar that login state has changed
-    window.dispatchEvent(
-      new Event("campusMarketAuthChange")
-    )
-
-    navigate(from, { replace: true })
   }
 
   return (
@@ -203,13 +205,16 @@ function Login() {
             {/* Submit */}
             <button
               type="submit"
-              className="group flex w-full items-center justify-center gap-3 rounded-full bg-[#c65d45] px-6 py-3.5 text-xs font-bold text-white transition hover:bg-[#b9503a] hover:shadow-lg hover:shadow-[#c65d45]/20"
+              disabled={loading}
+              className="group flex w-full items-center justify-center gap-3 rounded-full bg-[#c65d45] px-6 py-3.5 text-xs font-bold text-white transition hover:bg-[#b9503a] hover:shadow-lg hover:shadow-[#c65d45]/20 disabled:cursor-not-allowed disabled:opacity-70"
             >
-              Log in
+              {loading ? "Logging in..." : "Log in"}
 
-              <span className="transition-transform group-hover:translate-x-1">
-                →
-              </span>
+              {!loading && (
+                <span className="transition-transform group-hover:translate-x-1">
+                  →
+                </span>
+              )}
             </button>
 
           </form>
@@ -244,4 +249,3 @@ function Login() {
 }
 
 export default Login
-

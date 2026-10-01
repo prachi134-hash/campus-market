@@ -1,8 +1,37 @@
+import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import ProductCard from "../components/ProductCard"
 
 function Home() {
   const navigate = useNavigate()
+
+  const [products, setProducts] = useState([])
+  const [loadingProducts, setLoadingProducts] = useState(true)
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const response = await fetch(
+          "http://localhost:5000/api/products"
+        )
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch products")
+        }
+
+        const data = await response.json()
+
+        setProducts(data)
+      } catch (error) {
+        console.error("Failed to fetch products:", error)
+        setProducts([])
+      } finally {
+        setLoadingProducts(false)
+      }
+    }
+
+    fetchProducts()
+  }, [])
 
   const categories = [
     {
@@ -28,36 +57,6 @@ function Home() {
       count: "60+ items",
       image:
         "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=900&q=85",
-    },
-  ]
-
-  const products = [
-    {
-      id: 101,
-      image:
-        "https://images.unsplash.com/photo-1544947950-fa07a98d237f?auto=format&fit=crop&w=900&q=85",
-      title: "Engineering Mathematics Book",
-      price: 280,
-      category: "Books & Notes",
-      condition: "Like new",
-    },
-    {
-      id: 102,
-      image:
-        "https://images.unsplash.com/photo-1593642532400-2682810df593?auto=format&fit=crop&w=900&q=85",
-      title: "Wireless Keyboard",
-      price: 650,
-      category: "Electronics",
-      condition: "Good",
-    },
-    {
-      id: 103,
-      image:
-        "https://images.unsplash.com/photo-1503602642458-232111445657?auto=format&fit=crop&w=900&q=85",
-      title: "Study Chair",
-      price: 900,
-      category: "Furniture",
-      condition: "Good",
     },
   ]
 
@@ -362,16 +361,45 @@ function Home() {
 
           </div>
 
-          <div className="grid gap-5 md:grid-cols-3">
+          {/* DYNAMIC PRODUCTS */}
 
-            {products.map((product) => (
-              <ProductCard
-                key={product.id}
-                product={product}
-              />
-            ))}
+          {loadingProducts ? (
+            <div className="flex min-h-[250px] items-center justify-center rounded-2xl border border-[#d4cabc] bg-[#faf8f3]/70">
+              <p className="text-sm text-[#817b72]">
+                Loading fresh finds...
+              </p>
+            </div>
+          ) : products.length === 0 ? (
+            <div className="flex min-h-[250px] flex-col items-center justify-center rounded-2xl border border-[#d4cabc] bg-[#faf8f3]/70 px-6 text-center">
 
-          </div>
+              <h3 className="text-lg font-bold text-[#302e2a]">
+                No listings yet
+              </h3>
+
+              <p className="mt-2 max-w-sm text-xs leading-5 text-[#817b72]">
+                Be the first student to list something on Campus Market.
+              </p>
+
+              <button
+                onClick={() => navigate("/sell")}
+                className="mt-5 rounded-full bg-[#302e2a] px-5 py-2.5 text-xs font-bold text-white transition hover:bg-[#45413b]"
+              >
+                Sell an Item
+              </button>
+
+            </div>
+          ) : (
+            <div className="grid gap-5 md:grid-cols-3">
+
+              {products.slice(0, 3).map((product) => (
+                <ProductCard
+                  key={product._id}
+                  product={product}
+                />
+              ))}
+
+            </div>
+          )}
 
         </div>
 

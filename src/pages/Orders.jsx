@@ -1,26 +1,58 @@
+import { useEffect, useState } from "react"
 import { Link } from "react-router-dom"
 
-const myOrders = [
-  {
-    id: "CM1001",
-    title: "Engineering Mathematics — Vol. 2",
-    price: 450,
-    category: "Books & Notes",
-    condition: "Good",
-    image:
-      "https://images.unsplash.com/photo-1544947950-fa07a98d237f?auto=format&fit=crop&w=900&q=85",
-    meetupLocation: "Library",
-    meetupDate: "To be scheduled",
-    status: "Confirmed",
-    paymentStatus: "Pending",
-  },
-]
-
 function Orders() {
+  const [orders, setOrders] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetchOrders()
+  }, [])
+
+  const fetchOrders = async () => {
+    try {
+      const token = localStorage.getItem(
+        "campusMarketToken"
+      )
+
+      if (!token) {
+        setOrders([])
+        return
+      }
+
+      const response = await fetch(
+        "http://localhost:5000/api/orders",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      )
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(
+          data.message ||
+            "Failed to fetch orders"
+        )
+      }
+
+      setOrders(data)
+    } catch (error) {
+      console.error(
+        "Fetch orders error:",
+        error
+      )
+
+      setOrders([])
+    } finally {
+      setLoading(false)
+    }
+  }
+
   return (
     <main className="min-h-screen bg-[#f5f1e9]">
-
-      {/* Header */}
 
       <section className="border-b border-[#d9d0c3]">
 
@@ -53,11 +85,17 @@ function Orders() {
 
       </section>
 
-      {/* Orders */}
-
       <section className="mx-auto max-w-5xl px-6 py-10">
 
-        {myOrders.length === 0 ? (
+        {loading ? (
+          <div className="flex min-h-[380px] items-center justify-center">
+
+            <p className="text-sm text-[#817b72]">
+              Loading your orders...
+            </p>
+
+          </div>
+        ) : orders.length === 0 ? (
           <div className="flex min-h-[380px] flex-col items-center justify-center rounded-2xl border border-[#d4cabc] bg-[#faf8f3] px-6 text-center">
 
             <div className="flex h-14 w-14 items-center justify-center rounded-full border border-[#d5cbbd] bg-[#f5f1e9] text-[#817b72]">
@@ -81,12 +119,13 @@ function Orders() {
 
           </div>
         ) : (
-          <div className="space-y-5">
+          <div className="space-y-6">
 
-            {myOrders.map((order) => (
-              <OrderCard
-                key={order.id}
+            {orders.map((order) => (
+              <OrderGroup
+                key={order._id}
                 order={order}
+                refreshOrders={fetchOrders}
               />
             ))}
 
@@ -99,92 +138,132 @@ function Orders() {
   )
 }
 
-/* =========================================================
-   ORDER CARD
-========================================================= */
+function OrderGroup({
+  order,
+  refreshOrders,
+}) {
+  const [paymentLoading, setPaymentLoading] =
+    useState(false)
 
-function OrderCard({ order }) {
+  const paymentStatus =
+    order.payment?.status || "PENDING"
+
+  const activeItems = order.items.filter(
+    (item) =>
+      item.status !== "CANCELLED"
+  )
+
+  const hasPendingItems = activeItems.some(
+    (item) => item.status === "PENDING"
+  )
+
+  const allItemsConfirmed =
+    activeItems.length > 0 &&
+    activeItems.every(
+      (item) =>
+        item.status === "CONFIRMED"
+    )
+
+  const canPay =
+    paymentStatus === "PENDING" &&
+    allItemsConfirmed
+
+  const orderDate = new Date(
+    order.createdAt
+  ).toLocaleDateString("en-IN", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  })
+
+  const handlePayment = async () => {
+    try {
+      setPaymentLoading(true)
+
+      const token = localStorage.getItem(
+        "campusMarketToken"
+      )
+
+      if (!token) {
+        alert("Please login to continue.")
+        return
+      }
+
+      const response = await fetch(
+        "http://localhost:5000/api/payments/mock",
+        {
+          method: "POST",
+
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+
+          body: JSON.stringify({
+            orderId: order._id,
+          }),
+        }
+      )
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(
+          data.message ||
+            "Payment failed"
+        )
+      }
+
+      alert("Mock payment successful!")
+
+      await refreshOrders()
+    } catch (error) {
+      console.error(
+        "Payment error:",
+        error
+      )
+
+      alert(error.message)
+    } finally {
+      setPaymentLoading(false)
+    }
+  }
+
   return (
     <article className="overflow-hidden rounded-2xl border border-[#d4cabc] bg-[#faf8f3]">
 
-      <div className="flex flex-col md:flex-row">
+      {/* Order header */}
 
-        {/* Product */}
+      <div className="border-b border-[#ded6ca] px-5 py-4 sm:px-6">
 
-        <div className="flex flex-1 gap-5 p-5 sm:p-6">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
 
-          <div className="h-24 w-24 shrink-0 overflow-hidden rounded-xl bg-[#e5ded3] sm:h-28 sm:w-28">
+          <div>
 
-            <img
-              src={order.image}
-              alt={order.title}
-              className="h-full w-full object-cover"
-            />
-
-          </div>
-
-          <div className="min-w-0">
-
-            <p className="text-[9px] font-bold uppercase tracking-[0.15em] text-[#c65d45]">
-              {order.category}
+            <p className="text-[9px] font-bold uppercase tracking-[0.15em] text-[#817b72]">
+              Order
             </p>
 
-            <h2 className="mt-2 text-sm font-bold leading-5 text-[#25231f] sm:text-base">
-              {order.title}
-            </h2>
-
-            <p className="mt-2 text-lg font-bold text-[#25231f]">
-              ₹{order.price.toLocaleString("en-IN")}
+            <p className="mt-1 break-all text-xs font-semibold text-[#302e2a]">
+              #{order._id}
             </p>
 
             <p className="mt-1 text-[10px] text-[#817b72]">
-              Order #{order.id}
+              Placed on {orderDate}
             </p>
 
           </div>
 
-        </div>
-
-        {/* Status */}
-
-        <div className="border-t border-[#ded6ca] p-5 md:w-64 md:border-l md:border-t-0 sm:p-6">
-
-          <div className="flex items-center justify-between md:block">
+          <div className="sm:text-right">
 
             <p className="text-[9px] font-bold uppercase tracking-[0.15em] text-[#817b72]">
-              Order status
+              Order total
             </p>
 
-            <span className="rounded-full bg-[#e9eee4] px-3 py-1.5 text-[9px] font-bold uppercase tracking-wide text-[#5f7357]">
-              {order.status}
-            </span>
-
-          </div>
-
-          <div className="mt-5">
-
-            <p className="text-[9px] font-bold uppercase tracking-[0.15em] text-[#817b72]">
-              Campus Meetup
-            </p>
-
-            <p className="mt-2 text-xs font-semibold text-[#302e2a]">
-              {order.meetupLocation}
-            </p>
-
-            <p className="mt-1 text-xs text-[#817b72]">
-              {order.meetupDate}
-            </p>
-
-          </div>
-
-          <div className="mt-5 border-t border-[#ded6ca] pt-4">
-
-            <p className="text-[9px] font-bold uppercase tracking-[0.15em] text-[#817b72]">
-              Payment
-            </p>
-
-            <p className="mt-2 text-xs font-semibold text-[#302e2a]">
-              {order.paymentStatus}
+            <p className="mt-1 text-lg font-bold text-[#25231f]">
+              ₹{Number(
+                order.totalAmount || 0
+              ).toLocaleString("en-IN")}
             </p>
 
           </div>
@@ -193,7 +272,228 @@ function OrderCard({ order }) {
 
       </div>
 
+      {/* Order items */}
+
+      <div className="divide-y divide-[#ded6ca]">
+
+        {order.items.map((item) => (
+          <OrderItem
+            key={item._id}
+            item={item}
+          />
+        ))}
+
+      </div>
+
+      {/* Payment section */}
+
+      <div className="border-t border-[#ded6ca] bg-[#f7f4ee] p-5 sm:p-6">
+
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+
+          <div>
+
+            <p className="text-[9px] font-bold uppercase tracking-[0.15em] text-[#817b72]">
+              Payment
+            </p>
+
+            {paymentStatus === "PAID" ? (
+              <div>
+
+                <p className="mt-2 text-xs font-semibold text-[#5f7357]">
+                  Paid
+                </p>
+
+                {order.payment?.transactionId && (
+                  <p className="mt-1 break-all text-[10px] text-[#817b72]">
+                    Transaction:{" "}
+                    {order.payment.transactionId}
+                  </p>
+                )}
+
+              </div>
+            ) : hasPendingItems ? (
+              <p className="mt-2 text-xs text-[#817b72]">
+                Waiting for all sellers to confirm the order.
+              </p>
+            ) : order.status === "CANCELLED" ? (
+              <p className="mt-2 text-xs text-[#8d3f2d]">
+                Payment unavailable for this order.
+              </p>
+            ) : (
+              <p className="mt-2 text-xs text-[#302e2a]">
+                All sellers have confirmed the order.
+              </p>
+            )}
+
+          </div>
+
+          {canPay && (
+            <div className="w-full sm:w-64">
+
+              <button
+                onClick={handlePayment}
+                disabled={paymentLoading}
+                className="w-full rounded-md bg-[#c65d45] px-5 py-3 text-xs font-bold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {paymentLoading
+                  ? "Processing..."
+                  : `Pay ₹${Number(
+                      order.totalAmount || 0
+                    ).toLocaleString("en-IN")}`}
+              </button>
+
+              <p className="mt-2 text-center text-[10px] leading-4 text-[#817b72]">
+                Mock payment — no real money charged.
+              </p>
+
+            </div>
+          )}
+
+        </div>
+
+      </div>
+
     </article>
+  )
+}
+
+function OrderItem({ item }) {
+  const product = item.product
+
+  const status =
+    item.status === "PENDING"
+      ? "Pending"
+      : item.status === "CONFIRMED"
+      ? "Confirmed"
+      : item.status === "COMPLETED"
+      ? "Completed"
+      : item.status === "CANCELLED"
+      ? "Cancelled"
+      : item.status
+
+  const statusClass =
+    item.status === "CANCELLED"
+      ? "bg-[#f1dfda] text-[#8d3f2d]"
+      : item.status === "COMPLETED"
+      ? "bg-[#e3eee3] text-[#4f6e4e]"
+      : item.status === "CONFIRMED"
+      ? "bg-[#eee6d7] text-[#7b633d]"
+      : "bg-[#e9eee4] text-[#5f7357]"
+
+  return (
+    <div className="flex flex-col gap-5 p-5 sm:flex-row sm:p-6">
+
+      <div className="h-24 w-24 shrink-0 overflow-hidden rounded-xl bg-[#e5ded3] sm:h-28 sm:w-28">
+
+        <img
+          src={
+            product?.image ||
+            "https://via.placeholder.com/300"
+          }
+          alt={product?.title || "Product"}
+          className="h-full w-full object-cover"
+        />
+
+      </div>
+
+      <div className="min-w-0 flex-1">
+
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+
+          <div className="min-w-0">
+
+            <p className="text-[9px] font-bold uppercase tracking-[0.15em] text-[#c65d45]">
+              {product?.category || "Product"}
+            </p>
+
+            <h2 className="mt-2 text-sm font-bold leading-5 text-[#25231f] sm:text-base">
+              {product?.title || "Product unavailable"}
+            </h2>
+
+            <p className="mt-2 text-lg font-bold text-[#25231f]">
+              ₹{Number(
+                item.priceAtPurchase || 0
+              ).toLocaleString("en-IN")}
+            </p>
+
+          </div>
+
+          <span
+            className={`w-fit rounded-full px-3 py-1.5 text-[9px] font-bold uppercase tracking-wide ${statusClass}`}
+          >
+            {status}
+          </span>
+
+        </div>
+
+        <div className="mt-5 grid gap-4 sm:grid-cols-2">
+
+          <div>
+
+            <p className="text-[9px] font-bold uppercase tracking-[0.15em] text-[#817b72]">
+              Seller
+            </p>
+
+            <p className="mt-1 text-xs font-semibold text-[#302e2a]">
+              {item.seller?.name ||
+                "Seller"}
+            </p>
+
+            {item.seller?.college && (
+              <p className="mt-1 text-[10px] text-[#817b72]">
+                {item.seller.college}
+              </p>
+            )}
+
+          </div>
+
+          <div>
+
+            <p className="text-[9px] font-bold uppercase tracking-[0.15em] text-[#817b72]">
+              Campus Meetup
+            </p>
+
+            <p className="mt-1 text-xs font-semibold text-[#302e2a]">
+              {item.meetupLocation ||
+                "Not specified"}
+            </p>
+
+            <p className="mt-1 text-[10px] text-[#817b72]">
+              Seller-selected location
+            </p>
+
+          </div>
+
+        </div>
+
+        {item.status === "PENDING" && (
+          <p className="mt-4 text-[10px] text-[#817b72]">
+            Waiting for the seller to confirm this item.
+          </p>
+        )}
+
+        {item.status === "CONFIRMED" && (
+          <p className="mt-4 text-[10px] text-[#817b72]">
+            Seller confirmed this item. Payment is available when all non-cancelled items in the order are confirmed.
+          </p>
+        )}
+
+        {item.status === "COMPLETED" && (
+          <p className="mt-4 text-[10px] font-medium text-[#5f7357]">
+            This purchase has been completed.
+          </p>
+        )}
+
+        {item.status === "CANCELLED" && (
+          <p className="mt-4 text-[10px] text-[#8d3f2d]">
+            This item was cancelled.
+          </p>
+        )}
+
+      </div>
+
+    </div>
   )
 }
 

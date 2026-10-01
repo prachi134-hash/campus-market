@@ -1,108 +1,6 @@
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useState } from "react"
 import { useSearchParams } from "react-router-dom"
 import ProductCard from "../components/ProductCard"
-
-const products = [
-  {
-    id: 1,
-    title: "Engineering Mathematics — Vol. 2",
-    price: 450,
-    category: "Books & Notes",
-    condition: "Good",
-    location: "Library",
-    time: "2h ago",
-    image:
-      "https://images.unsplash.com/photo-1544947950-fa07a98d237f?auto=format&fit=crop&w=900&q=85",
-  },
-  {
-    id: 2,
-    title: "Casio Scientific Calculator",
-    price: 850,
-    category: "Electronics",
-    condition: "Excellent",
-    location: "Main Gate",
-    time: "4h ago",
-    image:
-      "https://images.unsplash.com/photo-1587145820266-a5951ee6f620?auto=format&fit=crop&w=900&q=85",
-  },
-  {
-    id: 3,
-    title: "Firefox Student Bicycle",
-    price: 3800,
-    category: "Cycles",
-    condition: "Good",
-    location: "Hostel Block A",
-    time: "6h ago",
-    image:
-      "https://images.unsplash.com/photo-1485965120184-e220f721d03e?auto=format&fit=crop&w=900&q=85",
-  },
-  {
-    id: 4,
-    title: "Clean Code — Robert C. Martin",
-    price: 520,
-    category: "Books & Notes",
-    condition: "Like new",
-    location: "Cafeteria",
-    time: "8h ago",
-    image:
-      "https://images.unsplash.com/photo-1532012197267-da84d127e765?auto=format&fit=crop&w=900&q=85",
-  },
-  {
-    id: 5,
-    title: "Mechanical Keyboard",
-    price: 2200,
-    category: "Electronics",
-    condition: "Excellent",
-    location: "Academic Block",
-    time: "1d ago",
-    image:
-      "https://images.unsplash.com/photo-1587829741301-dc798b83add3?auto=format&fit=crop&w=900&q=85",
-  },
-  {
-    id: 6,
-    title: "Desk Lamp",
-    price: 650,
-    category: "Furniture",
-    condition: "Good",
-    location: "Hostel Block B",
-    time: "1d ago",
-    image:
-      "https://images.unsplash.com/photo-1507473885765-e6ed057f782c?auto=format&fit=crop&w=900&q=85",
-  },
-  {
-    id: 7,
-    title: "Java Programming Notes",
-    price: 250,
-    category: "Books & Notes",
-    condition: "Good",
-    location: "Library",
-    time: "2d ago",
-    image:
-      "https://images.unsplash.com/photo-1495446815901-a7297e633e8d?auto=format&fit=crop&w=900&q=85",
-  },
-  {
-    id: 8,
-    title: "Laptop Stand",
-    price: 900,
-    category: "Electronics",
-    condition: "Like new",
-    location: "Main Gate",
-    time: "2d ago",
-    image:
-      "https://images.unsplash.com/photo-1611186871348-b1ce696e52c9?auto=format&fit=crop&w=900&q=85",
-  },
-  {
-    id: 9,
-    title: "College Backpack",
-    price: 700,
-    category: "Other",
-    condition: "Excellent",
-    location: "Cafeteria",
-    time: "3d ago",
-    image:
-      "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&w=900&q=85",
-  },
-]
 
 const categories = [
   "All",
@@ -125,6 +23,10 @@ function Marketplace() {
   const [searchParams, setSearchParams] = useSearchParams()
 
   const categoryFromUrl = searchParams.get("category")
+
+  const [products, setProducts] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState("")
 
   const [search, setSearch] = useState("")
   const [category, setCategory] = useState(
@@ -149,6 +51,79 @@ function Marketplace() {
   }, [categoryFromUrl])
 
   /*
+    Fetch products from the backend.
+
+    Search, category, condition and sorting
+    are now handled by MongoDB through
+    the backend API.
+  */
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        setLoading(true)
+        setError("")
+
+        const params = new URLSearchParams()
+
+        if (search.trim()) {
+          params.set("search", search.trim())
+        }
+
+        if (category !== "All") {
+          params.set("category", category)
+        }
+
+        if (condition !== "All") {
+          params.set("condition", condition)
+        }
+
+        if (sort === "Price: Low to High") {
+          params.set("sort", "price_asc")
+        } else if (sort === "Price: High to Low") {
+          params.set("sort", "price_desc")
+        } else {
+          params.set("sort", "newest")
+        }
+
+        const queryString = params.toString()
+
+        const response = await fetch(
+          `http://localhost:5000/api/products${
+            queryString ? `?${queryString}` : ""
+          }`
+        )
+
+        const data = await response.json()
+
+        if (!response.ok) {
+          throw new Error(
+            data.message || "Failed to fetch products"
+          )
+        }
+
+        setProducts(data)
+      } catch (error) {
+        console.error("Marketplace error:", error)
+
+        setError("Unable to load products.")
+        setProducts([])
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    /*
+      Small delay for search typing so we don't
+      send a request for every single keystroke.
+    */
+    const timer = setTimeout(() => {
+      fetchProducts()
+    }, 300)
+
+    return () => clearTimeout(timer)
+  }, [search, category, condition, sort])
+
+  /*
     Change category AND update the URL.
   */
   const handleCategoryChange = (newCategory) => {
@@ -163,41 +138,16 @@ function Marketplace() {
     }
   }
 
-  const filteredProducts = useMemo(() => {
-    let result = [...products]
-
-    if (search.trim()) {
-      const query = search.toLowerCase()
-
-      result = result.filter(
-        (product) =>
-          product.title.toLowerCase().includes(query) ||
-          product.category.toLowerCase().includes(query)
-      )
-    }
-
-    if (category !== "All") {
-      result = result.filter(
-        (product) => product.category === category
-      )
-    }
-
-    if (condition !== "All") {
-      result = result.filter(
-        (product) => product.condition === condition
-      )
-    }
-
-    if (sort === "Price: Low to High") {
-      result.sort((a, b) => a.price - b.price)
-    }
-
-    if (sort === "Price: High to Low") {
-      result.sort((a, b) => b.price - a.price)
-    }
-
-    return result
-  }, [search, category, condition, sort])
+  /*
+    Clear all filters.
+  */
+  const clearFilters = () => {
+    setSearch("")
+    setCategory("All")
+    setCondition("All")
+    setSort("Newest")
+    setSearchParams({})
+  }
 
   return (
     <main className="min-h-screen bg-[#f5f1e9] text-[#25231f]">
@@ -258,7 +208,7 @@ function Marketplace() {
         <div className="mb-4 flex items-center justify-between lg:hidden">
 
           <p className="text-xs font-semibold text-[#625e57]">
-            {filteredProducts.length} items
+            {products.length} items
           </p>
 
           <div className="flex gap-2">
@@ -297,13 +247,11 @@ function Marketplace() {
                 </h2>
 
                 {(category !== "All" ||
-                  condition !== "All") && (
+                  condition !== "All" ||
+                  search.trim() ||
+                  sort !== "Newest") && (
                   <button
-                    onClick={() => {
-                      setCategory("All")
-                      setCondition("All")
-                      setSearchParams({})
-                    }}
+                    onClick={clearFilters}
                     className="text-[9px] font-bold text-[#c65d45]"
                   >
                     Clear
@@ -401,16 +349,40 @@ function Marketplace() {
               </div>
 
               <p className="text-xs text-[#817b72]">
-                {filteredProducts.length} items
+                {products.length} items
               </p>
 
             </div>
 
-            {filteredProducts.length > 0 ? (
+            {loading ? (
+              <div className="flex min-h-[260px] items-center justify-center rounded-2xl border border-dashed border-[#d4cabc] bg-[#faf8f3] px-6 text-center">
+                <div>
+                  <p className="text-sm font-bold">
+                    Loading products...
+                  </p>
+
+                  <p className="mt-1 text-xs text-[#817b72]">
+                    Getting the latest listings.
+                  </p>
+                </div>
+              </div>
+            ) : error ? (
+              <div className="flex min-h-[260px] items-center justify-center rounded-2xl border border-dashed border-[#d4cabc] bg-[#faf8f3] px-6 text-center">
+                <div>
+                  <p className="text-sm font-bold">
+                    {error}
+                  </p>
+
+                  <p className="mt-1 text-xs text-[#817b72]">
+                    Please make sure the backend is running.
+                  </p>
+                </div>
+              </div>
+            ) : products.length > 0 ? (
               <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4">
-                {filteredProducts.map((product) => (
+                {products.map((product) => (
                   <ProductCard
-                    key={product.id}
+                    key={product._id}
                     product={product}
                   />
                 ))}
@@ -427,12 +399,7 @@ function Marketplace() {
                   </p>
 
                   <button
-                    onClick={() => {
-                      setSearch("")
-                      setCategory("All")
-                      setCondition("All")
-                      setSearchParams({})
-                    }}
+                    onClick={clearFilters}
                     className="mt-4 rounded-full bg-[#c65d45] px-5 py-2.5 text-[10px] font-bold text-white"
                   >
                     Clear filters
@@ -506,7 +473,7 @@ function Marketplace() {
               onClick={() => setShowFilters(false)}
               className="mt-6 w-full rounded-full bg-[#c65d45] py-3.5 text-xs font-bold text-white"
             >
-              Show {filteredProducts.length} items
+              Show {products.length} items
             </button>
 
           </div>

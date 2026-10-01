@@ -1,206 +1,131 @@
-
-import { useLocation, useNavigate, useParams } from "react-router-dom"
+import { useEffect, useState } from "react"
+import { useNavigate, useParams } from "react-router-dom"
 import { useCart } from "../context/CartContext"
 import { useWishlist } from "../context/WishlistContext"
 
-const fallbackProducts = {
-  1: {
-    id: 1,
-    title: "Engineering Mathematics — Vol. 2",
-    price: 450,
-    category: "Books & Notes",
-    condition: "Good",
-    location: "Library",
-    time: "2h ago",
-    owner: "Aarav Sharma",
-    college: "Cummins College of Engineering for Women",
-    year: "3rd Year",
-    description:
-      "Engineering Mathematics reference book in good condition. Useful for students preparing for semester examinations.",
-    image:
-      "https://images.unsplash.com/photo-1544947950-fa07a98d237f?auto=format&fit=crop&w=900&q=80",
-  },
-
-  2: {
-    id: 2,
-    title: "Casio Scientific Calculator",
-    price: 850,
-    category: "Electronics",
-    condition: "Excellent",
-    location: "Main Gate",
-    time: "4h ago",
-    owner: "Riya Patil",
-    college: "Cummins College of Engineering for Women",
-    year: "2nd Year",
-    description:
-      "Scientific calculator in excellent working condition. Suitable for engineering mathematics and examinations.",
-    image:
-      "https://images.unsplash.com/photo-1596495578060-5f0d5b9b9e5b?auto=format&fit=crop&w=900&q=80",
-  },
-
-  3: {
-    id: 3,
-    title: "Firefox Student Bicycle",
-    price: 3800,
-    category: "Cycles",
-    condition: "Good",
-    location: "Main Gate",
-    time: "6h ago",
-    owner: "Kunal Joshi",
-    college: "Cummins College of Engineering for Women",
-    year: "4th Year",
-    description:
-      "Student bicycle in good condition. Suitable for commuting around campus and nearby areas.",
-    image:
-      "https://images.unsplash.com/photo-1485965120184-e220f721d03e?auto=format&fit=crop&w=900&q=80",
-  },
-
-  4: {
-    id: 4,
-    title: "Clean Code — Robert C. Martin",
-    price: 520,
-    category: "Books & Notes",
-    condition: "Like new",
-    location: "Cafeteria",
-    time: "8h ago",
-    owner: "Sneha Kulkarni",
-    college: "Cummins College of Engineering for Women",
-    year: "3rd Year",
-    description:
-      "Clean Code book in like-new condition. Useful for students learning software development and writing maintainable code.",
-    image:
-      "https://images.unsplash.com/photo-1532012197267-da84d127e765?auto=format&fit=crop&w=900&q=80",
-  },
-
-  5: {
-    id: 5,
-    title: "Mechanical Keyboard",
-    price: 2200,
-    category: "Electronics",
-    condition: "Excellent",
-    location: "Academic Block",
-    time: "1d ago",
-    owner: "Aditya Deshmukh",
-    college: "Cummins College of Engineering for Women",
-    year: "3rd Year",
-    description:
-      "Mechanical keyboard in excellent condition with clean keys and working switches.",
-    image:
-      "https://images.unsplash.com/photo-1587829741301-dc798b83add3?auto=format&fit=crop&w=900&q=80",
-  },
-
-  6: {
-    id: 6,
-    title: "Desk Lamp",
-    price: 650,
-    category: "Furniture",
-    condition: "Good",
-    location: "Main Gate",
-    time: "1d ago",
-    owner: "Meera Shah",
-    college: "Cummins College of Engineering for Women",
-    year: "2nd Year",
-    description:
-      "Compact study desk lamp in good working condition.",
-    image:
-      "https://images.unsplash.com/photo-1507473885765-e6ed057f782c?auto=format&fit=crop&w=900&q=80",
-  },
-
-  7: {
-    id: 7,
-    title: "Java Programming Notes",
-    price: 250,
-    category: "Books & Notes",
-    condition: "Good",
-    location: "Library",
-    time: "2d ago",
-    owner: "Neha Gupta",
-    college: "Cummins College of Engineering for Women",
-    year: "3rd Year",
-    description:
-      "Handwritten and organized Java programming notes covering important concepts and examples.",
-    image:
-      "https://images.unsplash.com/photo-1515879218367-8466d910aaa4?auto=format&fit=crop&w=900&q=80",
-  },
-
-  8: {
-    id: 8,
-    title: "Laptop Stand",
-    price: 900,
-    category: "Electronics",
-    condition: "Like new",
-    location: "Main Gate",
-    time: "2d ago",
-    owner: "Ishita Jain",
-    college: "Cummins College of Engineering for Women",
-    year: "2nd Year",
-    description:
-      "Adjustable laptop stand in like-new condition.",
-    image:
-      "https://images.unsplash.com/photo-1527443224154-c4a3942d3acf?auto=format&fit=crop&w=900&q=80",
-  },
-
-  9: {
-    id: 9,
-    title: "College Backpack",
-    price: 700,
-    category: "Other",
-    condition: "Excellent",
-    location: "Cafeteria",
-    time: "3d ago",
-    owner: "Rahul More",
-    college: "Cummins College of Engineering for Women",
-    year: "2nd Year",
-    description:
-      "Spacious college backpack in excellent condition with multiple compartments.",
-    image:
-      "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&w=900&q=80",
-  },
-}
-
 function ProductDetails() {
   const { id } = useParams()
-  const location = useLocation()
   const navigate = useNavigate()
 
   const { addToCart } = useCart()
+
   const {
     toggleWishlist,
     isInWishlist,
   } = useWishlist()
 
-  /*
-    IMPORTANT:
-    Marketplace sends some product information through router state.
-    We merge it with fallback data so that the exact marketplace
-    information is preserved while owner/college/description etc.
-    are also available.
-  */
-  const fallbackProduct = fallbackProducts[id]
+  const [product, setProduct] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [cartLoading, setCartLoading] = useState(false)
+  const [isSeller, setIsSeller] = useState(false)
 
-  const product = {
-    ...fallbackProduct,
-    ...location.state?.product,
-  }
+  useEffect(() => {
+    const fetchProduct = async () => {
+      try {
+        const response = await fetch(
+          `http://localhost:5000/api/products/${id}`
+        )
 
-  if (!product.id) {
+        if (!response.ok) {
+          throw new Error("Product not found")
+        }
+
+        const data = await response.json()
+
+        if (data.status !== "AVAILABLE") {
+          setProduct({
+            unavailable: true,
+          })
+          return
+        }
+
+        setProduct({
+          ...data,
+          id: data._id,
+        })
+
+        const storedUser = localStorage.getItem(
+          "campusMarketUser"
+        )
+
+        if (storedUser && data.seller) {
+          try {
+            const user = JSON.parse(storedUser)
+
+            const loggedInUserId =
+              user._id || user.id
+
+            const sellerId =
+              data.seller._id || data.seller.id
+
+            if (
+              loggedInUserId &&
+              sellerId &&
+              loggedInUserId.toString() ===
+                sellerId.toString()
+            ) {
+              setIsSeller(true)
+            }
+          } catch (error) {
+            console.error(
+              "Failed to read logged-in user:",
+              error
+            )
+          }
+        }
+      } catch (error) {
+        console.error(
+          "Failed to fetch product:",
+          error
+        )
+
+        setProduct(null)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchProduct()
+  }, [id])
+
+  if (loading) {
     return (
       <main className="min-h-screen bg-[#f7f4ee] px-6 py-20">
         <div className="mx-auto max-w-3xl text-center">
-          <h1 className="text-2xl font-semibold text-[#302e2a]">
-            Product not found
+          <p className="text-sm text-[#716b63]">
+            Loading product...
+          </p>
+        </div>
+      </main>
+    )
+  }
+
+  if (!product || product.unavailable) {
+    return (
+      <main className="min-h-screen bg-[#f7f4ee] px-6 py-20">
+        <div className="mx-auto max-w-3xl text-center">
+
+          <p className="mb-2 text-sm font-medium uppercase tracking-[0.18em] text-[#c65d45]">
+            Listing unavailable
+          </p>
+
+          <h1 className="text-3xl font-semibold text-[#302e2a]">
+            This product is no longer available
           </h1>
 
-          <p className="mt-2 text-sm text-[#716b63]">
-            This product could not be found.
+          <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-[#716b63]">
+            It may have been reserved or already sold.
+            You can continue browsing other products
+            on the marketplace.
           </p>
 
           <button
             onClick={() => navigate("/marketplace")}
-            className="mt-6 rounded-full bg-[#302e2a] px-6 py-3 text-sm font-medium text-white"
+            className="mt-6 rounded-full bg-[#302e2a] px-6 py-3 text-sm font-medium text-white transition hover:bg-[#45413b]"
           >
             Back to Marketplace
           </button>
+
         </div>
       </main>
     )
@@ -208,58 +133,111 @@ function ProductDetails() {
 
   const saved = isInWishlist(product.id)
 
-  const handleAddToCart = () => {
-    const user = localStorage.getItem("campusMarketUser")
+  const handleAddToCart = async () => {
+    if (isSeller) {
+      return
+    }
+
+    const user = localStorage.getItem(
+      "campusMarketUser"
+    )
 
     if (!user) {
       navigate("/login")
       return
     }
 
-    addToCart(product)
+    setCartLoading(true)
+
+    try {
+      const success = await addToCart(product)
+
+      if (!success) {
+        return
+      }
+    } catch (error) {
+      console.error(
+        "Add to cart error:",
+        error
+      )
+    } finally {
+      setCartLoading(false)
+    }
   }
 
-  const handleBuyNow = () => {
-    const user = localStorage.getItem("campusMarketUser")
+  const handleBuyNow = async () => {
+    if (isSeller) {
+      return
+    }
+
+    const user = localStorage.getItem(
+      "campusMarketUser"
+    )
 
     if (!user) {
       navigate("/login")
       return
     }
 
-    addToCart(product)
-    navigate("/cart")
+    setCartLoading(true)
+
+    try {
+      const success = await addToCart(product)
+
+      if (!success) {
+        return
+      }
+
+      navigate("/cart")
+    } catch (error) {
+      console.error(
+        "Buy now error:",
+        error
+      )
+    } finally {
+      setCartLoading(false)
+    }
   }
 
   return (
     <main className="min-h-screen bg-[#f7f4ee]">
-      {/* Back */}
+
       <div className="mx-auto max-w-7xl px-6 pt-6 sm:px-8">
+
         <button
           onClick={() => navigate("/marketplace")}
           className="text-sm text-[#716b63] transition hover:text-[#302e2a]"
         >
           ← Back to Marketplace
         </button>
+
       </div>
 
       <section className="mx-auto max-w-7xl px-6 py-8 sm:px-8">
+
         <div className="grid gap-10 lg:grid-cols-[1.05fr_0.95fr]">
 
-          {/* Product image */}
           <div>
-            <div className="overflow-hidden rounded-2xl border border-[#ddd4c7] bg-[#eee9e0]">
+
+            <div className="relative overflow-hidden rounded-2xl border border-[#ddd4c7] bg-[#eee9e0]">
+
               <img
-                src={product.image}
+                src={
+                  product.image ||
+                  "https://via.placeholder.com/600"
+                }
                 alt={product.title}
                 className="aspect-[4/3] h-full w-full object-cover"
               />
+
             </div>
+
           </div>
 
-          {/* Product information */}
           <div>
+
             <div className="flex items-center justify-between gap-4">
+
               <span className="text-xs font-medium uppercase tracking-[0.16em] text-[#8b8378]">
                 {product.category}
               </span>
@@ -267,6 +245,7 @@ function ProductDetails() {
               <span className="rounded-full bg-[#e9e2d8] px-3 py-1 text-xs font-medium text-[#5f5951]">
                 {product.condition}
               </span>
+
             </div>
 
             <h1 className="mt-4 text-3xl font-semibold leading-tight tracking-tight text-[#20201e] sm:text-4xl">
@@ -281,95 +260,158 @@ function ProductDetails() {
               {product.description}
             </p>
 
-            {/* Seller */}
             <div className="mt-8 rounded-2xl border border-[#ddd4c7] bg-white p-5">
+
               <p className="text-xs font-medium uppercase tracking-[0.14em] text-[#8b8378]">
                 Seller
               </p>
 
-              <div className="mt-3 flex items-center gap-3">
-                <div className="flex h-11 w-11 items-center justify-center rounded-full bg-[#302e2a] text-sm font-semibold text-white">
-                  {product.owner?.charAt(0) || "S"}
-                </div>
+              {product.seller ? (
+                <div className="mt-3 flex items-center gap-3">
 
-                <div>
-                  <p className="font-semibold text-[#302e2a]">
-                    {product.owner || "Campus Market Seller"}
-                  </p>
+                  <div className="flex h-11 w-11 items-center justify-center rounded-full bg-[#302e2a] text-sm font-semibold text-white">
+                    {product.seller.name
+                      ?.charAt(0)
+                      ?.toUpperCase() || "S"}
+                  </div>
 
-                  <p className="mt-1 text-xs text-[#716b63]">
-                    {product.year || "Student"}
-                  </p>
+                  <div>
+
+                    <p className="font-semibold text-[#302e2a]">
+                      {product.seller.name}
+                    </p>
+
+                    <p className="mt-1 text-xs text-[#716b63]">
+                      {product.seller.course} ·{" "}
+                      {product.seller.year}
+                    </p>
+
+                  </div>
+
                 </div>
-              </div>
+              ) : (
+                <p className="mt-3 text-sm text-[#716b63]">
+                  Seller information unavailable
+                </p>
+              )}
+
             </div>
 
-            {/* College */}
             <div className="mt-4 rounded-2xl border border-[#ddd4c7] bg-white p-5">
+
               <p className="text-xs font-medium uppercase tracking-[0.14em] text-[#8b8378]">
                 College
               </p>
 
               <p className="mt-2 text-sm font-medium text-[#302e2a]">
-                {product.college || "College information unavailable"}
+                {product.seller?.college ||
+                  "College information unavailable"}
               </p>
+
             </div>
 
-            {/* Meetup */}
             <div className="mt-4 rounded-2xl border border-[#ddd4c7] bg-white p-5">
+
               <p className="text-xs font-medium uppercase tracking-[0.14em] text-[#8b8378]">
                 Campus Meetup
               </p>
 
               <div className="mt-3 flex items-start gap-3">
-                <div className="text-lg">⌖</div>
+
+                <div className="text-lg">
+                  ⌖
+                </div>
 
                 <div>
+
                   <p className="text-sm font-semibold text-[#302e2a]">
                     {product.location}
                   </p>
 
                   <p className="mt-1 text-xs leading-5 text-[#716b63]">
-                    Exact meetup details will be arranged after the
-                    order is confirmed.
+                    This is the seller-selected campus meetup location for this listing.
                   </p>
+
                 </div>
+
               </div>
+
             </div>
 
-            {/* Actions */}
-            <div className="mt-7 grid gap-3 sm:grid-cols-[1fr_auto]">
-              <button
-                onClick={handleBuyNow}
-                className="rounded-full bg-[#302e2a] px-6 py-3.5 text-sm font-medium text-white transition hover:bg-[#45413b]"
-              >
-                Buy Now
-              </button>
+            {isSeller ? (
+              <div className="mt-7 rounded-2xl border border-[#ddd4c7] bg-[#eee9e0] p-5 text-center">
 
-              <button
-                onClick={() => toggleWishlist(product)}
-                className="rounded-full border border-[#302e2a] px-6 py-3.5 text-sm font-medium text-[#302e2a] transition hover:bg-[#302e2a] hover:text-white"
-              >
-                {saved ? "♥ Saved" : "♡ Save"}
-              </button>
-            </div>
+                <p className="text-sm font-semibold text-[#302e2a]">
+                  This is your listing
+                </p>
 
-            <button
-              onClick={handleAddToCart}
-              className="mt-3 w-full rounded-full border border-[#c65d45] px-6 py-3.5 text-sm font-medium text-[#c65d45] transition hover:bg-[#c65d45] hover:text-white"
-            >
-              Add to Cart
-            </button>
+                <p className="mt-1 text-xs leading-5 text-[#716b63]">
+                  You cannot purchase or add your own product to the cart.
+                </p>
 
-            <p className="mt-4 text-center text-xs text-[#8b8378]">
-              Campus meetup only · No delivery
-            </p>
+                <button
+                  onClick={() =>
+                    navigate(
+                      `/edit-listing/${product.id}`
+                    )
+                  }
+                  className="mt-4 rounded-full border border-[#302e2a] px-5 py-2.5 text-xs font-medium text-[#302e2a] transition hover:bg-[#302e2a] hover:text-white"
+                >
+                  Manage Listing
+                </button>
+
+              </div>
+            ) : (
+              <>
+                <div className="mt-7 grid gap-3 sm:grid-cols-[1fr_auto]">
+
+                  <button
+                    onClick={handleBuyNow}
+                    disabled={cartLoading}
+                    className="rounded-full bg-[#302e2a] px-6 py-3.5 text-sm font-medium text-white transition hover:bg-[#45413b] disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {cartLoading
+                      ? "Adding..."
+                      : "Buy Now"}
+                  </button>
+
+                  <button
+                    onClick={() =>
+                      toggleWishlist(product)
+                    }
+                    className="rounded-full border border-[#302e2a] px-6 py-3.5 text-sm font-medium text-[#302e2a] transition hover:bg-[#302e2a] hover:text-white"
+                  >
+                    {saved
+                      ? "♥ Saved"
+                      : "♡ Save"}
+                  </button>
+
+                </div>
+
+                <button
+                  onClick={handleAddToCart}
+                  disabled={cartLoading}
+                  className="mt-3 w-full rounded-full border border-[#c65d45] px-6 py-3.5 text-sm font-medium text-[#c65d45] transition hover:bg-[#c65d45] hover:text-white disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {cartLoading
+                    ? "Adding..."
+                    : "Add to Cart"}
+                </button>
+
+                <p className="mt-4 text-center text-xs text-[#8b8378]">
+                  Campus meetup only · No delivery
+                </p>
+              </>
+            )}
+
           </div>
+
         </div>
+
       </section>
+
     </main>
   )
 }
 
 export default ProductDetails
-

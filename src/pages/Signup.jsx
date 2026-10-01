@@ -1,3 +1,4 @@
+
 import { useState } from "react"
 import { Link, useNavigate } from "react-router-dom"
 
@@ -7,6 +8,7 @@ function Signup() {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
+    college: "",
     course: "",
     year: "",
     password: "",
@@ -15,6 +17,7 @@ function Signup() {
 
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState("")
+  const [loading, setLoading] = useState(false)
 
   const handleChange = (e) => {
     setFormData({
@@ -23,7 +26,7 @@ function Signup() {
     })
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
 
     setError("")
@@ -31,9 +34,11 @@ function Signup() {
     if (
       !formData.name ||
       !formData.email ||
+      !formData.college ||
       !formData.course ||
       !formData.year ||
-      !formData.password
+      !formData.password ||
+      !formData.confirmPassword
     ) {
       setError("Please fill in all required fields.")
       return
@@ -44,20 +49,56 @@ function Signup() {
       return
     }
 
-    const user = {
-      name: formData.name,
-      email: formData.email,
-      course: formData.course,
-      year: formData.year,
-      password: formData.password,
+    try {
+      setLoading(true)
+
+      const response = await fetch(
+        "http://localhost:5000/api/auth/signup",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            name: formData.name,
+            email: formData.email,
+            college: formData.college,
+            course: formData.course,
+            year: formData.year,
+            password: formData.password,
+          }),
+        }
+      )
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(
+          data.message || "Failed to create account."
+        )
+      }
+
+      localStorage.setItem(
+        "campusMarketToken",
+        data.token
+      )
+
+      localStorage.setItem(
+        "campusMarketUser",
+        JSON.stringify(data.user)
+      )
+
+      window.dispatchEvent(
+        new Event("campusMarketAuthChange")
+      )
+
+      navigate("/profile", { replace: true })
+    } catch (error) {
+      console.error("Signup error:", error)
+      setError(error.message)
+    } finally {
+      setLoading(false)
     }
-
-    localStorage.setItem(
-      "campusMarketUser",
-      JSON.stringify(user)
-    )
-
-    navigate("/profile", { replace: true })
   }
 
   return (
@@ -73,7 +114,6 @@ function Signup() {
 
       <div className="relative z-10 w-full max-w-lg">
 
-        {/* Header */}
         <div className="mb-7 text-center">
 
           <p className="text-[9px] font-bold uppercase tracking-[0.22em] text-[#c65d45]">
@@ -90,7 +130,6 @@ function Signup() {
 
         </div>
 
-        {/* Signup Card */}
         <div className="rounded-[24px] border border-[#d4cabc] bg-[#faf8f3] p-6 shadow-[0_18px_60px_rgba(68,52,42,0.08)] sm:p-8">
 
           <form
@@ -98,7 +137,6 @@ function Signup() {
             className="space-y-5"
           >
 
-            {/* Name */}
             <div>
 
               <label
@@ -120,7 +158,6 @@ function Signup() {
 
             </div>
 
-            {/* Email */}
             <div>
 
               <label
@@ -142,7 +179,27 @@ function Signup() {
 
             </div>
 
-            {/* Course + Year */}
+            <div>
+
+              <label
+                htmlFor="college"
+                className="mb-2 block text-xs font-bold text-[#302e2a]"
+              >
+                College
+              </label>
+
+              <input
+                id="college"
+                name="college"
+                type="text"
+                value={formData.college}
+                onChange={handleChange}
+                placeholder="Your college name"
+                className="w-full rounded-xl border border-[#d5cbbd] bg-[#f8f5ee] px-4 py-3.5 text-sm outline-none transition placeholder:text-[#a39c92] focus:border-[#c65d45] focus:ring-2 focus:ring-[#c65d45]/10"
+              />
+
+            </div>
+
             <div className="grid gap-5 sm:grid-cols-2">
 
               <div>
@@ -193,7 +250,6 @@ function Signup() {
 
             </div>
 
-            {/* Password */}
             <div>
 
               <label
@@ -227,7 +283,6 @@ function Signup() {
 
             </div>
 
-            {/* Confirm Password */}
             <div>
 
               <label
@@ -249,23 +304,25 @@ function Signup() {
 
             </div>
 
-            {/* Error */}
             {error && (
               <div className="rounded-xl border border-[#d7aaa0] bg-[#f5e5e1] px-4 py-3 text-xs font-medium text-[#9d4938]">
                 {error}
               </div>
             )}
 
-            {/* Submit */}
             <button
               type="submit"
-              className="group flex w-full items-center justify-center gap-3 rounded-full bg-[#c65d45] px-6 py-3.5 text-xs font-bold text-white transition hover:bg-[#b9503a] hover:shadow-lg hover:shadow-[#c65d45]/20"
+              disabled={loading}
+              className="group flex w-full items-center justify-center gap-3 rounded-full bg-[#c65d45] px-6 py-3.5 text-xs font-bold text-white transition hover:bg-[#b9503a] hover:shadow-lg hover:shadow-[#c65d45]/20 disabled:cursor-not-allowed disabled:opacity-70"
             >
-              Create account
+              {loading ? "Creating account..." : "Create account"}
 
-              <span className="transition-transform group-hover:translate-x-1">
-                →
-              </span>
+              {!loading && (
+                <span className="transition-transform group-hover:translate-x-1">
+                  →
+                </span>
+              )}
+
             </button>
 
           </form>
@@ -294,3 +351,4 @@ function Signup() {
 }
 
 export default Signup
+
